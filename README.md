@@ -114,6 +114,7 @@ The repository is public, so GitHub Pages is free:
 ```
 index.html                          The whole prototype: HTML, CSS and plain JavaScript in one file
 README.md                           This file
+CLAUDE.md                           Rules, skills workflow and definition of done for Claude Code sessions
 docs/prompts/settings-menu.md       Prompt used to build the settings menu (share and language)
 docs/prompts/proposal-alignment.md  Prompt to compare the prototype with the proposal deck
 ```
