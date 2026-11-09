@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bastão: input handoffs between disciplines</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #004A42;
+    --primary-soft: #E3EEEC;
+    --blocked: #B84B4B;
+    --blocked-soft: #F6E6E6;
+    --risk: #D99A2B;
+    --risk-soft: #FBF0DC;
+    --delivered: #1FBF94;
+    --delivered-soft: #DDF6EE;
+    --late: #6B7774;
+    --late-soft: #ECEFEE;
+    --bg: #F3F5F4;
+    --card: #FFFFFF;
+    --text: #1B2A27;
+    --muted: #5B6966;
+    --line: #E1E6E4;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(0, 40, 35, 0.06), 0 8px 24px rgba(0, 40, 35, 0.07);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: "Montserrat", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+
+  .page { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
+
+  /* Header */
+  .hero {
+    background: var(--primary);
+    color: #FFFFFF;
+    padding: 28px 0 72px;
+  }
+  .hero-inner { max-width: 1240px; margin: 0 auto; padding: 0 16px; position: relative; }
+  .brand { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .brand-mark {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    display: grid; place-items: center; flex: none;
+  }
+  .brand h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+  .tagline { margin: 6px 0 0; color: rgba(255, 255, 255, 0.82); font-size: 15px; max-width: 640px; }
+  .fictional-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #FFFFFF; color: var(--primary);
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+    padding: 4px 10px; border-radius: 999px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+  .card + .card, .section { margin-top: 20px; }
+  .card-title { margin: 0; font-size: 18px; font-weight: 700; }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .card-sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+  /* Toolbar */
+  .toolbar { margin-top: -48px; display: flex; gap: 16px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; }
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .field label { font-weight: 600; font-size: 13px; }
+  .field .hint { color: var(--muted); font-size: 12px; }
+  .field .error { color: var(--blocked); font-size: 12px; font-weight: 600; min-height: 0; }
+  .field .error:empty { display: none; }
+  .input {
+    border: 1.5px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; background: #FFFFFF; width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 74, 66, 0.15); }
+  .input[aria-invalid="true"] { border-color: var(--blocked); }
+  .ref-input { width: 150px; font-weight: 700; font-size: 17px; letter-spacing: 0.5px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: 0; border-radius: 10px; padding: 11px 18px;
+    font-weight: 700; cursor: pointer; white-space: nowrap;
+    transition: transform 0.1s, background 0.15s, box-shadow 0.15s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 3px solid rgba(0, 74, 66, 0.35); outline-offset: 2px; }
+  .btn-primary { background: var(--primary); color: #FFFFFF; }
+  .btn-primary:hover { background: #00372F; }
+  .btn-ghost { background: var(--primary-soft); color: var(--primary); }
+  .btn-ghost:hover { background: #D3E5E2; }
+  .btn-small { padding: 7px 12px; font-size: 13px; border-radius: 8px; }
+
+  /* Indicators */
+  .kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+  .kpis .card { margin-top: 0; }
+  .kpi { position: relative; overflow: hidden; }
+  .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--kpi-color, var(--primary)); }
+  .kpi-label { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 40px; font-weight: 800; line-height: 1.1; margin: 6px 0 4px; color: var(--kpi-color, var(--primary)); }
+  .kpi-detail { font-size: 13px; color: var(--muted); }
+  .kpi-ontime { --kpi-color: var(--primary); }
+  .kpi-blocked { --kpi-color: var(--blocked); }
+
+  /* Handoff table */
+  .table-wrap { width: 100%; overflow-x: auto; }
+  table.handoffs { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .handoffs th {
+    text-align: left; font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    padding: 10px 10px; border-bottom: 1.5px solid var(--line); white-space: nowrap;
+  }
+  .handoffs td { padding: 14px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: break-word; }
+  .handoffs tr:last-child td { border-bottom: 0; }
+  .route { font-weight: 600; }
+  .muted { color: var(--muted); }
+  .date-cell { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 700; white-space: nowrap;
+  }
+  .badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+  .badge-on-time { background: var(--primary-soft); color: var(--primary); }
+  .badge-at-risk { background: var(--risk-soft); color: #7A5410; }
+  .badge-at-risk::before { background: var(--risk); }
+  .badge-blocked { background: var(--blocked); color: #FFFFFF; }
+  .badge-delivered-on-time { background: var(--delivered); color: #00332D; }
+  .badge-delivered-late { background: var(--late-soft); color: #3D4846; }
+  .badge-delivered-late::before { background: var(--late); }
+  .badge-missing { background: #FFFFFF; color: var(--blocked); border: 1.5px dashed var(--blocked); }
+  .accepted-tag { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--primary); }
+  .warnings { margin: 8px 0 0; padding: 0; list-style: none; }
+  .warnings li {
+    font-size: 12px; font-weight: 600; color: #8A3232;
+    background: var(--blocked-soft); border-radius: 8px; padding: 6px 8px; margin-top: 4px;
+  }
+
+  /* History */
+  .history { list-style: none; margin: 0; padding: 0; }
+  .history li { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .history li:last-child { border-bottom: 0; }
+  .history time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .history .tag { display: inline-block; font-size: 11px; font-weight: 700; color: var(--muted); background: var(--bg); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+  .readonly-note { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-weight: 600; }
+
+  .footer-note { margin-top: 24px; text-align: center; font-size: 12.5px; color: var(--muted); }
+
+  /* Dialogs */
+  dialog {
+    border: 0; border-radius: var(--radius); padding: 0;
+    width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
+    box-shadow: 0 24px 64px rgba(0, 30, 26, 0.3);
+    color: var(--text);
+  }
+  dialog::backdrop { background: rgba(0, 30, 26, 0.45); }
+  .dialog-body { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .dialog-title { margin: 0; font-size: 19px; font-weight: 800; }
+  .dialog-context { margin: -6px 0 0; color: var(--muted); font-size: 13px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
+  .required { color: var(--blocked); }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 20px);
+    background: var(--text); color: #FFFFFF; padding: 10px 16px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s; max-width: calc(100vw - 32px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* Responsive: turn the table into cards */
+  @media (max-width: 960px) {
+    .kpis { grid-template-columns: 1fr; gap: 12px; }
+    .kpi-value { font-size: 34px; }
+    .handoffs thead { display: none; }
+    .handoffs, .handoffs tbody, .handoffs tr, .handoffs td { display: block; width: 100%; }
+    .table-wrap { overflow-x: visible; }
+    .handoffs tr {
+      display: flex; flex-direction: column;
+      border: 1px solid var(--line); border-radius: 12px;
+      padding: 8px 14px; margin-bottom: 12px;
+    }
+    .handoffs td { overflow-wrap: anywhere; }
+    .handoffs td {
+      display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 10px;
+      padding: 7px 0; border-bottom: 1px dashed var(--line);
+    }
+    .handoffs tr td:last-child { border-bottom: 0; }
+    .handoffs tr td.cell-status { border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 2px; }
+    .handoffs td::before {
+      content: attr(data-label);
+      font-size: 11.5px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.4px; padding-top: 2px;
+    }
+    .handoffs td.cell-status { order: -1; }
+  }
+
+  @media (max-width: 560px) {
+    .hero { padding: 22px 0 64px; }
+    .brand h1 { font-size: 26px; }
+    .card { padding: 16px; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar .btn { width: 100%; }
+    .ref-input { width: 100%; }
+    .form-grid { grid-template-columns: 1fr; }
+    .history li { grid-template-columns: 1fr; gap: 2px; }
+    .dialog-actions .btn { flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 17 17 4"></path><path d="M14 4h3v3"></path><path d="M7 20l13-13"></path><path d="M20 17v3h-3"></path>
+        </svg>
+      </div>
+      <h1 data-i18n="app.title">Bastão</h1>
+      <span class="fictional-badge" data-i18n="app.fictional">Fictional data</span>
+    </div>
+    <p class="tagline" data-i18n="app.tagline">Formal input handoffs between engineering disciplines.</p>
+  </div>
+</header>
+
+<main class="page">
+  <section class="card toolbar" aria-label="Controls">
+    <div class="field">
+      <label for="reference-date" data-i18n="ref.label">Reference date</label>
+      <input id="reference-date" class="input ref-input" type="text" inputmode="numeric" autocomplete="off"
+             placeholder="DD/MM/YYYY" maxlength="10" aria-describedby="reference-hint reference-error">
+      <span id="reference-hint" class="hint" data-i18n="ref.help">Every status is calculated against this date instead of today.</span>
+      <span id="reference-error" class="error" role="alert"></span>
+    </div>
+    <button id="declare-button" class="btn btn-primary" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+      <span data-i18n="action.declare">Declare handoff</span>
+    </button>
+  </section>
+
+  <section class="kpis" aria-label="Indicators" id="kpis"></section>
+
+  <section class="card section" aria-labelledby="handoffs-title">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title" id="handoffs-title" data-i18n="list.title">Handoffs</h2>
+        <p class="card-sub" id="handoffs-count"></p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="handoffs">
+        <thead><tr id="handoffs-head"></tr></thead>
+        <tbody id="handoffs-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card section" aria-labelledby="history-title">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title" id="history-title" data-i18n="history.title">History</h2>
+        <p class="card-sub" data-i18n="history.sub">Every declaration, delivery and acceptance, newest first.</p>
+      </div>
+      <span class="readonly-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        <span data-i18n="history.readonly">Read only</span>
+      </span>
+    </div>
+    <ol class="history" id="history-list"></ol>
+  </section>
+
+  <p class="footer-note" data-i18n="app.prototypeNote">Prototype for presentation only. Data lives in this page and resets to the fictional examples on reload.</p>
+</main>
+
+<!-- Declare handoff dialog -->
+<dialog id="declare-dialog" aria-labelledby="declare-title">
+  <form id="declare-form" class="dialog-body" novalidate>
+    <h2 class="dialog-title" id="declare-title" data-i18n="declare.title">Declare handoff</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label for="f-origin"><span data-i18n="col.origin">Origin</span> <span class="required">*</span></label>
+        <input id="f-origin" name="origin" class="input" list="disciplines" autocomplete="off" required>
+        <span class="error" data-error-for="origin"></span>
+      </div>
+      <div class="field">
+        <label for="f-destination"><span data-i18n="col.destination">Destination</span> <span class="required">*</span></label>
+        <input id="f-destination" name="destination" class="input" list="disciplines" autocomplete="off" required>
+        <span class="error" data-error-for="destination"></span>
+      </div>
+      <div class="field full">
+        <label for="f-input"><span data-i18n="col.input">Input</span> <span class="required">*</span></label>
+        <input id="f-input" name="input" class="input" autocomplete="off" required>
+        <span class="error" data-error-for="input"></span>
+      </div>
+      <div class="field">
+        <label for="f-planned"><span data-i18n="col.planned">Planned date</span> <span class="required">*</span></label>
+        <input id="f-planned" name="plannedDate" class="input date-input" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" required>
+        <span class="error" data-error-for="plannedDate"></span>
+      </div>
+      <div class="field">
+        <label for="f-owner" data-i18n="col.owner">Owner</label>
+        <input id="f-owner" name="owner" class="input" autocomplete="off">
+      </div>
+    </div>
+    <p class="hint muted" data-i18n="declare.hint">Delivery and acceptance are recorded later with the Deliver and Accept buttons.</p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close data-i18n="action.cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" data-i18n="declare.submit">Declare</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Deliver / Accept dialog -->
+<dialog id="date-dialog" aria-labelledby="date-title">
+  <form id="date-form" class="dialog-body" novalidate>
+    <h2 class="dialog-title" id="date-title"></h2>
+    <p class="dialog-context" id="date-context"></p>
+    <div class="field">
+      <label for="f-action-date" id="date-label"></label>
+      <input id="f-action-date" name="actionDate" class="input date-input" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" required>
+      <span class="hint" id="date-hint"></span>
+      <span class="error" data-error-for="actionDate"></span>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close data-i18n="action.cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="date-submit"></button>
+    </div>
+  </form>
+</dialog>
+
+<datalist id="disciplines">
+  <option value="Steel Structure"></option>
+  <option value="Civil"></option>
+  <option value="Electrical"></option>
+  <option value="Automation"></option>
+  <option value="Commissioning"></option>
+  <option value="Mechanical"></option>
+  <option value="Piping"></option>
+</datalist>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   1. Interface text
+   All visible strings live here so the page text stays in one place.
+   ===================================================================== */
+
+const TEXT = {
+  en: {
+    'app.title': 'Bastão',
+    'app.fictional': 'Fictional data',
+    'app.tagline': 'Formal input handoffs between engineering disciplines.',
+    'app.prototypeNote': 'Prototype for presentation only. Data lives in this page and resets to the fictional examples on reload.',
+    'ref.label': 'Reference date',
+    'ref.help': 'Every status is calculated against this date instead of today.',
+    'ref.invalid': 'Use a valid date in the DD/MM/YYYY format. Statuses still use {ref}.',
+    'action.declare': 'Declare handoff',
+    'action.deliver': 'Deliver',
+    'action.accept': 'Accept',
+    'action.cancel': 'Cancel',
+    'kpi.onTime': 'On-time deliveries',
+    'kpi.onTime.detail': '{onTime} of {delivered} deliveries on or before the planned date',
+    'kpi.onTime.empty': 'No deliveries yet',
+    'kpi.blocked': 'Blocked handoffs',
+    'kpi.blocked.detail': 'Not delivered and past the planned date',
+    'kpi.blockedDays': 'Open blocked days',
+    'kpi.blockedDays.detail': 'Sum of blocked days of handoffs not yet delivered',
+    'kpi.na': 'N/A',
+    'list.title': 'Handoffs',
+    'list.count.one': '{n} handoff',
+    'list.count.other': '{n} handoffs',
+    'list.empty': 'No handoffs yet. Use Declare handoff to add one.',
+    'col.origin': 'Origin',
+    'col.destination': 'Destination',
+    'col.input': 'Input',
+    'col.planned': 'Planned date',
+    'col.delivery': 'Delivery date',
+    'col.acceptance': 'Acceptance date',
+    'col.owner': 'Owner',
+    'col.status': 'Status',
+    'col.actions': 'Actions',
+    'value.notSet': 'Not set',
+    'value.noOwner': 'Not assigned',
+    'value.accepted': 'Accepted by destination',
+    'value.noActions': 'No pending action',
+    'status.onTime': 'On time',
+    'status.atRisk': 'At risk',
+    'status.blocked.one': 'Blocked, {n} day',
+    'status.blocked.other': 'Blocked, {n} days',
+    'status.deliveredOnTime': 'Delivered, on time',
+    'status.deliveredLate.one': 'Delivered, {n} day late',
+    'status.deliveredLate.other': 'Delivered, {n} days late',
+    'status.missingPlanned': 'Missing planned date',
+    'warning.delivery-after-reference': 'Delivery date is after the reference date, so it does not count as delivered.',
+    'warning.acceptance-after-reference': 'Acceptance date is after the reference date, so the acceptance is ignored.',
+    'warning.acceptance-before-delivery': 'Acceptance date is before the delivery date, so the acceptance is ignored.',
+    'warning.acceptance-without-delivery': 'Acceptance has no valid delivery, so the acceptance is ignored.',
+    'warning.invalid-delivery-date': 'Delivery date is not a valid DD/MM/YYYY date.',
+    'warning.invalid-acceptance-date': 'Acceptance date is not a valid DD/MM/YYYY date.',
+    'history.title': 'History',
+    'history.sub': 'Every declaration, delivery and acceptance, newest first.',
+    'history.readonly': 'Read only',
+    'history.sample': 'Fictional',
+    'history.declared': 'Handoff declared: {origin} to {destination}, "{input}". Planned date {date}.',
+    'history.delivered': 'Delivery recorded: {origin} to {destination}, "{input}". Delivery date {date}.',
+    'history.accepted': 'Acceptance recorded: {destination} accepted "{input}" from {origin}. Acceptance date {date}.',
+    'declare.title': 'Declare handoff',
+    'declare.hint': 'Delivery and acceptance are recorded later with the Deliver and Accept buttons.',
+    'declare.submit': 'Declare',
+    'declare.done': 'Handoff declared.',
+    'deliver.title': 'Record delivery',
+    'deliver.label': 'Delivery date',
+    'deliver.hint': 'Cannot be after the reference date ({ref}).',
+    'deliver.submit': 'Record delivery',
+    'deliver.done': 'Delivery recorded.',
+    'accept.title': 'Record acceptance',
+    'accept.label': 'Acceptance date',
+    'accept.hint': 'Between the delivery date ({delivery}) and the reference date ({ref}).',
+    'accept.submit': 'Record acceptance',
+    'accept.done': 'Acceptance recorded.',
+    'dialog.context': '{origin} to {destination}: {input}',
+    'error.required': 'This field is required.',
+    'error.date': 'Use a valid date in the DD/MM/YYYY format.',
+    'error.sameDiscipline': 'Origin and destination must be different.',
+    'error.afterReference': 'Cannot be after the reference date ({ref}).',
+    'error.beforeDelivery': 'Cannot be before the delivery date ({delivery}).'
+  }
+};
+
+let currentLang = 'en';
+
+/** Returns the text for a key, filling {placeholders}. Falls back to English. */
+function t(key, params, lang) {
+  const dict = TEXT[lang || currentLang] || TEXT.en;
+  let text = dict[key];
+  if (text === undefined) text = TEXT.en[key];
+  if (text === undefined) return key;
+  if (params) {
+    text = text.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
+  }
+  return text;
+}
+
+/** Picks the singular or plural form of a key ("key.one" or "key.other"). */
+function tPlural(key, n, params, lang) {
+  return t(key + (n === 1 ? '.one' : '.other'), Object.assign({ n: n }, params), lang);
+}
+
+/* =====================================================================
+   2. Business rules: pure functions, no access to the page.
+   Dates are text in DD/MM/YYYY. Internally they become a "day number"
+   (days since 01/01/1970, UTC) so time zones never change the result.
+   ===================================================================== */
+
+const MS_PER_DAY = 86400000;
+const AT_RISK_WINDOW_DAYS = 2;
+
+const STATUS = {
+  DELIVERED: 'delivered',
+  BLOCKED: 'blocked',
+  AT_RISK: 'at-risk',
+  ON_TIME: 'on-time',
+  MISSING_PLANNED: 'missing-planned-date'
+};
+
+/** "20/09/2026" -> day number, or null if the text is not a real date. */
+function parseDateToDay(text) {
+  if (typeof text !== 'string') return null;
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text.trim());
+  if (!match) return null;
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const time = Date.UTC(year, month - 1, day);
+  const check = new Date(time);
+  if (check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== day) {
+    return null;
+  }
+  return Math.round(time / MS_PER_DAY);
+}
+
+/** Day number -> "DD/MM/YYYY". */
+function formatDay(dayNumber) {
+  const d = new Date(dayNumber * MS_PER_DAY);
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  return dd + '/' + mm + '/' + d.getUTCFullYear();
+}
+
+function isValidDate(text) {
+  return parseDateToDay(text) !== null;
+}
+
+/** Calendar days from one date to another (positive when "to" is later). */
+function daysBetween(fromText, toText) {
+  const from = parseDateToDay(fromText);
+  const to = parseDateToDay(toText);
+  if (from === null || to === null) return null;
+  return to - from;
+}
+
+/**
+ * Calculates the status of one handoff on the reference date.
+ * Rules, first match wins:
+ *   0. Planned date empty or invalid: "Missing planned date", nothing else is calculated.
+ *   1. Valid delivery date: Delivered (on time if delivery <= planned, else X days late).
+ *   2. No delivery and reference after planned: Blocked, blocked days = reference minus planned.
+ *   3. No delivery and planned 0 to 2 days after reference: At risk.
+ *   4. No delivery and planned more than 2 days after reference: On time.
+ * Validation: a delivery or acceptance date after the reference date raises a
+ * warning and is ignored (a future delivery does not count as delivered).
+ */
+function calculateStatus(item, referenceDate) {
+  const ref = parseDateToDay(referenceDate);
+  if (ref === null) throw new Error('Invalid reference date: ' + referenceDate);
+
+  const result = {
+    status: null,
+    onTime: null,
+    daysLate: 0,
+    blockedDays: 0,
+    accepted: false,
+    warnings: []
+  };
+
+  const planned = parseDateToDay(item.plannedDate || '');
+  if (planned === null) {
+    result.status = STATUS.MISSING_PLANNED;
+    result.warnings.push(STATUS.MISSING_PLANNED);
+    return result;
+  }
+
+  let delivery = null;
+  if (item.deliveryDate) {
+    const d = parseDateToDay(item.deliveryDate);
+    if (d === null) result.warnings.push('invalid-delivery-date');
+    else if (d > ref) result.warnings.push('delivery-after-reference');
+    else delivery = d;
+  }
+
+  if (item.acceptanceDate) {
+    const a = parseDateToDay(item.acceptanceDate);
+    if (a === null) result.warnings.push('invalid-acceptance-date');
+    else if (a > ref) result.warnings.push('acceptance-after-reference');
+    else if (delivery === null) result.warnings.push('acceptance-without-delivery');
+    else if (a < delivery) result.warnings.push('acceptance-before-delivery');
+    else result.accepted = true;
+  }
+
+  if (delivery !== null) {
+    result.status = STATUS.DELIVERED;
+    result.onTime = delivery <= planned;
+    result.daysLate = Math.max(0, delivery - planned);
+    return result;
+  }
+
+  const daysUntilPlanned = planned - ref;
+  if (daysUntilPlanned < 0) {
+    result.status = STATUS.BLOCKED;
+    result.blockedDays = -daysUntilPlanned;
+  } else if (daysUntilPlanned <= AT_RISK_WINDOW_DAYS) {
+    result.status = STATUS.AT_RISK;
+  } else {
+    result.status = STATUS.ON_TIME;
+  }
+  return result;
+}
+
+/** Text shown in the status badge, for example "Delivered, 6 days late". */
+function formatStatusLabel(result, lang) {
+  switch (result.status) {
+    case STATUS.DELIVERED:
+      return result.onTime
+        ? t('status.deliveredOnTime', null, lang)
+        : tPlural('status.deliveredLate', result.daysLate, null, lang);
+    case STATUS.BLOCKED:
+      return tPlural('status.blocked', result.blockedDays, null, lang);
+    case STATUS.AT_RISK:
+      return t('status.atRisk', null, lang);
+    case STATUS.ON_TIME:
+      return t('status.onTime', null, lang);
+    default:
+      return t('status.missingPlanned', null, lang);
+  }
+}
+
+/**
+ * Panel indicators.
+ *   onTimePercent   = on-time deliveries / all deliveries (null when there are no deliveries)
+ *   blockedCount    = handoffs with status Blocked
+ *   openBlockedDays = sum of blocked days of handoffs not yet delivered
+ */
+function calculateIndicators(items, referenceDate) {
+  let delivered = 0;
+  let onTime = 0;
+  let blockedCount = 0;
+  let openBlockedDays = 0;
+  items.forEach((item) => {
+    const r = calculateStatus(item, referenceDate);
+    if (r.status === STATUS.DELIVERED) {
+      delivered += 1;
+      if (r.onTime) onTime += 1;
+    } else if (r.status === STATUS.BLOCKED) {
+      blockedCount += 1;
+      openBlockedDays += r.blockedDays;
+    }
+  });
+  return {
+    deliveredCount: delivered,
+    onTimeCount: onTime,
+    onTimePercent: delivered === 0 ? null : Math.round((onTime / delivered) * 100),
+    blockedCount: blockedCount,
+    openBlockedDays: openBlockedDays
+  };
+}
+
+function formatPercent(value, lang) {
+  return value === null ? t('kpi.na', null, lang) : value + '%';
+}
+
+/** Validation for the "Declare handoff" form. Returns { field: errorKey }. */
+function validateDeclaration(data) {
+  const errors = {};
+  ['origin', 'destination', 'input', 'plannedDate'].forEach((field) => {
+    if (!String(data[field] || '').trim()) errors[field] = 'error.required';
+  });
+  if (!errors.plannedDate && !isValidDate(data.plannedDate)) errors.plannedDate = 'error.date';
+  if (!errors.origin && !errors.destination &&
+      data.origin.trim().toLowerCase() === data.destination.trim().toLowerCase()) {
+    errors.destination = 'error.sameDiscipline';
+  }
+  return errors;
+}
+
+/** Validation for Deliver and Accept dates. Returns an error key or null. */
+function validateActionDate(kind, dateText, item, referenceDate) {
+  if (!String(dateText || '').trim()) return 'error.required';
+  const day = parseDateToDay(dateText);
+  if (day === null) return 'error.date';
+  if (day > parseDateToDay(referenceDate)) return 'error.afterReference';
+  if (kind === 'accept' && day < parseDateToDay(item.deliveryDate)) return 'error.beforeDelivery';
+  return null;
+}
+
+/** History text for one entry. */
+function describeHistoryEntry(entry, lang) {
+  return t('history.' + entry.type, {
+    origin: entry.origin,
+    destination: entry.destination,
+    input: entry.input,
+    date: entry.date
+  }, lang);
+}
+
+/** Real clock time as "DD/MM/YYYY HH:MM" (local time of the computer). */
+function formatTimestamp(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear() +
+    ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+}
+
+/* =====================================================================
+   3. Acceptance tests. They run on load and print a console.table.
+   Run again at any time from the browser console: runAcceptanceTests()
+   ===================================================================== */
+
+const DEFAULT_REFERENCE_DATE = '20/09/2026';
+
+const SAMPLE_ITEMS = [
+  { origin: 'Steel Structure', destination: 'Civil', input: 'Foundation drawings', plannedDate: '12/09/2026', deliveryDate: '18/09/2026', acceptanceDate: '18/09/2026', owner: 'Steel Structure lead' },
+  { origin: 'Civil', destination: 'Electrical', input: 'Load list', plannedDate: '20/09/2026', deliveryDate: '', acceptanceDate: '', owner: 'Civil lead' },
+  { origin: 'Electrical', destination: 'Automation', input: 'Single-line diagram', plannedDate: '18/09/2026', deliveryDate: '', acceptanceDate: '', owner: 'Electrical lead' },
+  { origin: 'Automation', destination: 'Commissioning', input: 'Test parameters', plannedDate: '28/09/2026', deliveryDate: '19/09/2026', acceptanceDate: '', owner: 'Automation lead' }
+];
+
+function statusWithWarnings(item, referenceDate) {
+  const r = calculateStatus(item, referenceDate);
+  const label = formatStatusLabel(r, 'en');
+  const extra = r.warnings.filter((w) => w !== STATUS.MISSING_PLANNED);
+  return extra.length ? label + '; warning: ' + extra.join(', ') : label;
+}
+
+function indicatorsText(items, referenceDate) {
+  const k = calculateIndicators(items, referenceDate);
+  return formatPercent(k.onTimePercent, 'en') + ' on time | ' + k.blockedCount + ' blocked | ' + k.openBlockedDays + ' open blocked days';
+}
+
+function runAcceptanceTests() {
+  const REF = DEFAULT_REFERENCE_DATE;
+  const item = (planned, delivery, acceptance) => ({ plannedDate: planned, deliveryDate: delivery || '', acceptanceDate: acceptance || '' });
+
+  const cases = [
+    // Acceptance criteria from the specification
+    ['A', 'Delivered, 6 days late', () => statusWithWarnings(item('12/09/2026', '18/09/2026'), REF)],
+    ['B', 'At risk', () => statusWithWarnings(item('20/09/2026'), REF)],
+    ['C', 'Blocked, 2 days', () => statusWithWarnings(item('18/09/2026'), REF)],
+    ['D', 'Delivered, on time', () => statusWithWarnings(item('28/09/2026', '19/09/2026'), REF)],
+    ['E', 'On time', () => statusWithWarnings(item('25/09/2026'), REF)],
+    ['F', 'Blocked, 3 days', () => statusWithWarnings(item('12/09/2026'), '15/09/2026')],
+    ['G', 'Delivered, on time', () => statusWithWarnings(item('20/09/2026', '20/09/2026'), REF)],
+    ['H', 'Missing planned date', () => statusWithWarnings(item(''), REF)],
+    ['KPI sample data', '50% on time | 1 blocked | 2 open blocked days', () => indicatorsText(SAMPLE_ITEMS, REF)],
+    // Extra edge cases
+    ['X1 at risk, 2 days ahead', 'At risk', () => statusWithWarnings(item('22/09/2026'), REF)],
+    ['X2 on time, 3 days ahead', 'On time', () => statusWithWarnings(item('23/09/2026'), REF)],
+    ['X3 blocked, singular', 'Blocked, 1 day', () => statusWithWarnings(item('19/09/2026'), REF)],
+    ['X4 late, singular', 'Delivered, 1 day late', () => statusWithWarnings(item('19/09/2026', '20/09/2026'), REF)],
+    ['X5 future delivery', 'Blocked, 3 days; warning: delivery-after-reference', () => statusWithWarnings(item('12/09/2026', '18/09/2026'), '15/09/2026')],
+    ['X6 future acceptance', 'Delivered, 6 days late; warning: acceptance-after-reference', () => statusWithWarnings(item('12/09/2026', '18/09/2026', '21/09/2026'), REF)],
+    ['X7 acceptance before delivery', 'Delivered, on time; warning: acceptance-before-delivery', () => statusWithWarnings(item('28/09/2026', '19/09/2026', '18/09/2026'), REF)],
+    ['X8 accept keeps status', 'Delivered, on time | accepted: true', () => {
+      const r = calculateStatus(item('28/09/2026', '19/09/2026', '20/09/2026'), REF);
+      return formatStatusLabel(r, 'en') + ' | accepted: ' + r.accepted;
+    }],
+    ['X9 KPI without deliveries', 'N/A on time | 1 blocked | 2 open blocked days', () => indicatorsText([item('18/09/2026'), item('25/09/2026')], REF)],
+    // On 15/09 both sample deliveries (18/09 and 19/09) are in the future, so none counts.
+    ['X10 KPI, reference 15/09', 'N/A on time | 1 blocked | 3 open blocked days', () => indicatorsText(SAMPLE_ITEMS, '15/09/2026')],
+    ['X11 invalid date 31/02', 'null', () => String(parseDateToDay('31/02/2026'))],
+    ['X12 date round trip', '20/09/2026', () => formatDay(parseDateToDay('20/09/2026'))],
+    ['X13 days across months', '18', () => String(daysBetween('25/08/2026', '12/09/2026'))]
+  ];
+
+  const results = cases.map(([name, expected, run]) => {
+    let actual;
+    try { actual = run(); } catch (error) { actual = 'ERROR: ' + error.message; }
+    return { case: name, expected: expected, actual: actual, pass: actual === expected };
+  });
+
+  const failed = results.filter((r) => !r.pass).length;
+  console.log('Bastão acceptance tests (reference date ' + REF + '): ' +
+    (results.length - failed) + ' of ' + results.length + ' passed');
+  console.table(results);
+  return { total: results.length, passed: results.length - failed, failed: failed, results: results };
+}
+
+/** Console helper to try any case: tryCase("12/09/2026", "", "15/09/2026") */
+function tryCase(plannedDate, deliveryDate, referenceDate, acceptanceDate) {
+  return statusWithWarnings({
+    plannedDate: plannedDate || '',
+    deliveryDate: deliveryDate || '',
+    acceptanceDate: acceptanceDate || ''
+  }, referenceDate || state.referenceDate);
+}
+
+/* =====================================================================
+   4. Page state (memory only, resets on reload)
+   ===================================================================== */
+
+const state = {
+  referenceDate: DEFAULT_REFERENCE_DATE,
+  items: [],
+  history: [],
+  nextId: 1
+};
+
+function addHistory(type, item, date, isSample) {
+  // Entries are only ever appended: the history has no edit or delete.
+  state.history.push(Object.freeze({
+    at: new Date(),
+    type: type,
+    origin: item.origin,
+    destination: item.destination,
+    input: item.input,
+    date: date,
+    isSample: Boolean(isSample)
+  }));
+}
+
+function loadSampleData() {
+  SAMPLE_ITEMS.forEach((sample) => {
+    const item = Object.assign({ id: state.nextId++ }, sample);
+    state.items.push(item);
+    addHistory('declared', item, item.plannedDate, true);
+    if (item.deliveryDate) addHistory('delivered', item, item.deliveryDate, true);
+    if (item.acceptanceDate) addHistory('accepted', item, item.acceptanceDate, true);
+  });
+}
+
+/* =====================================================================
+   5. Rendering
+   ===================================================================== */
+
+const $ = (id) => document.getElementById(id);
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function badgeClass(result) {
+  switch (result.status) {
+    case STATUS.DELIVERED: return result.onTime ? 'badge-delivered-on-time' : 'badge-delivered-late';
+    case STATUS.BLOCKED: return 'badge-blocked';
+    case STATUS.AT_RISK: return 'badge-at-risk';
+    case STATUS.ON_TIME: return 'badge-on-time';
+    default: return 'badge-missing';
+  }
+}
+
+function applyStaticText() {
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+}
+
+function renderIndicators() {
+  const k = calculateIndicators(state.items, state.referenceDate);
+  const onTimeDetail = k.deliveredCount === 0
+    ? t('kpi.onTime.empty')
+    : t('kpi.onTime.detail', { onTime: k.onTimeCount, delivered: k.deliveredCount });
+  $('kpis').innerHTML =
+    '<article class="card kpi kpi-ontime">' +
+      '<div class="kpi-label">' + escapeHtml(t('kpi.onTime')) + '</div>' +
+      '<div class="kpi-value" data-kpi="on-time">' + escapeHtml(formatPercent(k.onTimePercent)) + '</div>' +
+      '<div class="kpi-detail">' + escapeHtml(onTimeDetail) + '</div>' +
+    '</article>' +
+    '<article class="card kpi kpi-blocked">' +
+      '<div class="kpi-label">' + escapeHtml(t('kpi.blocked')) + '</div>' +
+      '<div class="kpi-value" data-kpi="blocked">' + k.blockedCount + '</div>' +
+      '<div class="kpi-detail">' + escapeHtml(t('kpi.blocked.detail')) + '</div>' +
+    '</article>' +
+    '<article class="card kpi kpi-blocked">' +
+      '<div class="kpi-label">' + escapeHtml(t('kpi.blockedDays')) + '</div>' +
+      '<div class="kpi-value" data-kpi="blocked-days">' + k.openBlockedDays + '</div>' +
+      '<div class="kpi-detail">' + escapeHtml(t('kpi.blockedDays.detail')) + '</div>' +
+    '</article>';
+}
+
+const COLUMNS = ['origin', 'destination', 'input', 'planned', 'delivery', 'acceptance', 'owner', 'status', 'actions'];
+
+function renderHandoffs() {
+  $('handoffs-head').innerHTML = COLUMNS.map((c) => '<th scope="col">' + escapeHtml(t('col.' + c)) + '</th>').join('');
+  $('handoffs-count').textContent = tPlural('list.count', state.items.length);
+
+  if (state.items.length === 0) {
+    $('handoffs-body').innerHTML = '<tr><td colspan="' + COLUMNS.length + '" class="muted">' + escapeHtml(t('list.empty')) + '</td></tr>';
+    return;
+  }
+
+  const label = (key) => ' data-label="' + escapeHtml(t('col.' + key)) + '"';
+  const dateCell = (value) => value
+    ? '<span class="date-cell">' + escapeHtml(value) + '</span>'
+    : '<span class="muted">' + escapeHtml(t('value.notSet')) + '</span>';
+
+  $('handoffs-body').innerHTML = state.items.map((item) => {
+    const r = calculateStatus(item, state.referenceDate);
+    const warnings = r.warnings.filter((w) => w !== STATUS.MISSING_PLANNED);
+
+    const canDeliver = !item.deliveryDate;
+    const canAccept = r.status === STATUS.DELIVERED && !item.acceptanceDate;
+    let actions = '';
+    if (canDeliver) actions += '<button class="btn btn-primary btn-small" type="button" data-action="deliver" data-id="' + item.id + '">' + escapeHtml(t('action.deliver')) + '</button>';
+    if (canAccept) actions += '<button class="btn btn-ghost btn-small" type="button" data-action="accept" data-id="' + item.id + '">' + escapeHtml(t('action.accept')) + '</button>';
+    if (!actions) actions = '<span class="muted">' + escapeHtml(t('value.noActions')) + '</span>';
+
+    return '<tr>' +
+      '<td' + label('origin') + '><span class="route">' + escapeHtml(item.origin) + '</span></td>' +
+      '<td' + label('destination') + '><span class="route">' + escapeHtml(item.destination) + '</span></td>' +
+      '<td' + label('input') + '>' + escapeHtml(item.input) + '</td>' +
+      '<td' + label('planned') + '>' + dateCell(item.plannedDate) + '</td>' +
+      '<td' + label('delivery') + '>' + dateCell(item.deliveryDate) + '</td>' +
+      '<td' + label('acceptance') + '>' + dateCell(item.acceptanceDate) + '</td>' +
+      '<td' + label('owner') + '>' + (item.owner ? escapeHtml(item.owner) : '<span class="muted">' + escapeHtml(t('value.noOwner')) + '</span>') + '</td>' +
+      '<td class="cell-status"' + label('status') + '><div>' +
+        '<span class="badge ' + badgeClass(r) + '" data-status="' + r.status + '">' + escapeHtml(formatStatusLabel(r)) + '</span>' +
+        (r.accepted ? '<div class="accepted-tag">' + escapeHtml(t('value.accepted')) + '</div>' : '') +
+        (warnings.length ? '<ul class="warnings">' + warnings.map((w) => '<li>' + escapeHtml(t('warning.' + w)) + '</li>').join('') + '</ul>' : '') +
+      '</div></td>' +
+      '<td' + label('actions') + '><div class="actions">' + actions + '</div></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderHistory() {
+  const entries = state.history.slice().reverse();
+  $('history-list').innerHTML = entries.map((entry) =>
+    '<li>' +
+      '<time>' + escapeHtml(formatTimestamp(entry.at)) + '</time>' +
+      '<span>' + escapeHtml(describeHistoryEntry(entry)) +
+        (entry.isSample ? '<span class="tag">' + escapeHtml(t('history.sample')) + '</span>' : '') +
+      '</span>' +
+    '</li>'
+  ).join('');
+}
+
+function render() {
+  renderIndicators();
+  renderHandoffs();
+  renderHistory();
+}
+
+let toastTimer = null;
+function showToast(message) {
+  const toast = $('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* =====================================================================
+   6. Interaction
+   ===================================================================== */
+
+/** Types the slashes for the user: "20092026" becomes "20/09/2026". */
+function attachDateMask(input) {
+  input.addEventListener('input', () => {
+    const digits = input.value.replace(/\D/g, '').slice(0, 8);
+    let out = digits.slice(0, 2);
+    if (digits.length > 2) out += '/' + digits.slice(2, 4);
+    if (digits.length > 4) out += '/' + digits.slice(4, 8);
+    input.value = out;
+  });
+}
+
+function setFieldError(form, field, key, params) {
+  const el = form.querySelector('[data-error-for="' + field + '"]');
+  const input = form.querySelector('[name="' + field + '"]');
+  if (el) el.textContent = key ? t(key, params) : '';
+  if (input) input.setAttribute('aria-invalid', key ? 'true' : 'false');
+}
+
+function clearFormErrors(form) {
+  form.querySelectorAll('[data-error-for]').forEach((el) => { el.textContent = ''; });
+  form.querySelectorAll('[aria-invalid]').forEach((el) => el.setAttribute('aria-invalid', 'false'));
+}
+
+function setupReferenceDate() {
+  const input = $('reference-date');
+  input.value = state.referenceDate;
+  attachDateMask(input);
+  input.addEventListener('input', () => {
+    if (input.value.length < 10) return;
+    updateReferenceDate(input.value);
+  });
+  input.addEventListener('change', () => updateReferenceDate(input.value));
+}
+
+function updateReferenceDate(value) {
+  const input = $('reference-date');
+  if (!isValidDate(value)) {
+    input.setAttribute('aria-invalid', 'true');
+    $('reference-error').textContent = t('ref.invalid', { ref: state.referenceDate });
+    return;
+  }
+  input.setAttribute('aria-invalid', 'false');
+  $('reference-error').textContent = '';
+  if (value !== state.referenceDate) {
+    state.referenceDate = value;
+    render();
+  }
+}
+
+function setupDeclareDialog() {
+  const dialog = $('declare-dialog');
+  const form = $('declare-form');
+  attachDateMask($('f-planned'));
+
+  $('declare-button').addEventListener('click', () => {
+    form.reset();
+    clearFormErrors(form);
+    dialog.showModal();
+    $('f-origin').focus();
+  });
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = {
+      origin: form.origin.value.trim(),
+      destination: form.destination.value.trim(),
+      input: form.input.value.trim(),
+      plannedDate: form.plannedDate.value.trim(),
+      owner: form.owner.value.trim()
+    };
+    clearFormErrors(form);
+    const errors = validateDeclaration(data);
+    const fields = Object.keys(errors);
+    if (fields.length) {
+      fields.forEach((f) => setFieldError(form, f, errors[f]));
+      form.querySelector('[name="' + fields[0] + '"]').focus();
+      return;
+    }
+    const item = Object.assign({ id: state.nextId++, deliveryDate: '', acceptanceDate: '' }, data);
+    state.items.push(item);
+    addHistory('declared', item, item.plannedDate, false);
+    dialog.close();
+    render();
+    showToast(t('declare.done'));
+  });
+}
+
+let pendingAction = null;
+
+function openDateDialog(kind, item) {
+  const form = $('date-form');
+  pendingAction = { kind: kind, id: item.id };
+  form.reset();
+  clearFormErrors(form);
+  $('date-title').textContent = t(kind + '.title');
+  $('date-context').textContent = t('dialog.context', { origin: item.origin, destination: item.destination, input: item.input });
+  $('date-label').textContent = t(kind + '.label');
+  $('date-hint').textContent = t(kind + '.hint', { ref: state.referenceDate, delivery: item.deliveryDate });
+  $('date-submit').textContent = t(kind + '.submit');
+  $('f-action-date').value = state.referenceDate;
+  $('date-dialog').showModal();
+  $('f-action-date').focus();
+  $('f-action-date').select();
+}
+
+function setupDateDialog() {
+  const form = $('date-form');
+  attachDateMask($('f-action-date'));
+
+  $('handoffs-body').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const item = state.items.find((i) => i.id === Number(button.dataset.id));
+    if (item) openDateDialog(button.dataset.action, item);
+  });
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!pendingAction) return;
+    const item = state.items.find((i) => i.id === pendingAction.id);
+    const value = form.actionDate.value.trim();
+    const error = validateActionDate(pendingAction.kind, value, item, state.referenceDate);
+    if (error) {
+      setFieldError(form, 'actionDate', error, { ref: state.referenceDate, delivery: item.deliveryDate });
+      return;
+    }
+    if (pendingAction.kind === 'deliver') {
+      item.deliveryDate = value;
+      addHistory('delivered', item, value, false);
+      showToast(t('deliver.done'));
+    } else {
+      item.acceptanceDate = value;
+      addHistory('accepted', item, value, false);
+      showToast(t('accept.done'));
+    }
+    pendingAction = null;
+    $('date-dialog').close();
+    render();
+  });
+}
+
+function setupDialogClosing() {
+  document.querySelectorAll('dialog').forEach((dialog) => {
+    dialog.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => dialog.close()));
+    // Click on the dark backdrop closes the dialog.
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  });
+  // Closing with Esc, Cancel or the backdrop forgets the pending Deliver or Accept.
+  $('date-dialog').addEventListener('close', () => { pendingAction = null; });
+}
+
+/* =====================================================================
+   7. Start
+   ===================================================================== */
+
+function init() {
+  applyStaticText();
+  loadSampleData();
+  setupReferenceDate();
+  setupDeclareDialog();
+  setupDateDialog();
+  setupDialogClosing();
+  render();
+  runAcceptanceTests();
+}
+
+init();
+</script>
+</body>
+</html>
