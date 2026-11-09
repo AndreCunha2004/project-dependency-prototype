@@ -165,7 +165,6 @@
   .kpi-value small { font-size: 16px; font-weight: 700; margin-left: 4px; }
   .kpi-detail { font-size: 13px; color: var(--muted); }
   .kpi-blocked { --kpi-color: var(--blocked); }
-  .kpi-risk { --kpi-color: #A06F16; }
 
   /* Panel layout: table and weekly summary */
   .panel-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; margin-top: 20px; }
@@ -1626,7 +1625,43 @@ function runAcceptanceTests() {
     ['PR3 expansion at risk cascade', 'Piping → Instrumentation', () => findCascade(SAMPLE_EXPANSION_ITEMS, SAMPLE_EXPANSION_ITEMS[1], REF).map(formatRoute).join(', ')],
     ['PR4 duplicate project name', 'error.duplicateProject', () => validateProjectName(' pilot PROJECT ', SAMPLE_PROJECTS)],
     ['PR5 empty project name', 'error.required', () => validateProjectName('  ', SAMPLE_PROJECTS)],
-    ['PR6 new project name', 'null', () => String(validateProjectName('Retrofit project', SAMPLE_PROJECTS))]
+    ['PR6 new project name', 'null', () => String(validateProjectName('Retrofit project', SAMPLE_PROJECTS))],
+    // Validation of forms
+    ['V1 declare, empty form', 'origin, destination, input, plannedDate', () => Object.keys(validateDeclaration({})).join(', ')],
+    ['V2 declare, same discipline', 'destination: error.sameDiscipline', () => {
+      const e = validateDeclaration({ origin: 'Civil', destination: ' civil ', input: 'x', plannedDate: '20/09/2026' });
+      return Object.keys(e).map((k) => k + ': ' + e[k]).join(', ');
+    }],
+    ['V3 declare, invalid dates', 'plannedDate: error.date, neededByDate: error.date', () => {
+      const e = validateDeclaration({ origin: 'A', destination: 'B', input: 'x', plannedDate: '31/02/2026', neededByDate: '2026-09-20' });
+      return Object.keys(e).map((k) => k + ': ' + e[k]).join(', ');
+    }],
+    ['V4 declare, valid with optional fields empty', 'no errors', () => Object.keys(validateDeclaration({ origin: 'A', destination: 'B', input: 'x', plannedDate: '20/09/2026', neededByDate: '' })).length ? 'errors' : 'no errors'],
+    ['V5 deliver after reference, no person', 'actionDate: error.afterReference, actionPerson: error.required', () => {
+      const e = validateAction('deliver', { actionDate: '21/09/2026', actionPerson: ' ' }, item('18/09/2026'), REF);
+      return Object.keys(e).map((k) => k + ': ' + e[k]).join(', ');
+    }],
+    ['V6 accept before delivery', 'actionDate: error.beforeDelivery', () => {
+      const e = validateAction('accept', { actionDate: '17/09/2026', actionPerson: 'Civil lead' }, item('12/09/2026', '18/09/2026'), REF);
+      return Object.keys(e).map((k) => k + ': ' + e[k]).join(', ');
+    }],
+    ['V7 accept on delivery day', 'no errors', () => Object.keys(validateAction('accept', { actionDate: '18/09/2026', actionPerson: 'Civil lead' }, item('12/09/2026', '18/09/2026'), REF)).length ? 'errors' : 'no errors'],
+    // Other warnings and labels
+    ['X14 invalid delivery date text', 'Blocked, 2 days; warning: invalid-delivery-date', () => statusWithWarnings(item('18/09/2026', '18-09-2026'), REF)],
+    ['X15 acceptance without delivery', 'At risk; warning: acceptance-without-delivery', () => statusWithWarnings(item('21/09/2026', '', '19/09/2026'), REF)],
+    ['X16 short labels for the map', 'Late 6d | Blocked 2d | At risk | On time | Delivered | No date', () => [
+      item('12/09/2026', '18/09/2026'), item('18/09/2026'), item('20/09/2026'), item('25/09/2026'), item('28/09/2026', '19/09/2026'), item('')
+    ].map((it) => formatShortStatus(calculateStatus(it, REF), 'en')).join(' | ')],
+    ['H1 history text, declared with owner', 'Handover declared: A to B, "x". Planned date 20/09/2026. Owner: Lead.', () => describeHistoryEntry({ type: 'declared', origin: 'A', destination: 'B', input: 'x', date: '20/09/2026', person: 'Lead' }, 'en')],
+    ['H2 history text, delivery without person', 'Delivery recorded: A to B, "x". Delivery date 18/09/2026, by not informed.', () => describeHistoryEntry({ type: 'delivered', origin: 'A', destination: 'B', input: 'x', date: '18/09/2026', person: '' }, 'en')],
+    ['H3 history text, project created (pt)', 'Projeto criado: Retrofit.', () => describeHistoryEntry({ type: 'created', name: 'Retrofit' }, 'pt')],
+    // Safety and robustness
+    ['E1 user text is escaped', '&lt;img src=x onerror=&quot;alert(1)&quot;&gt; &amp; &#39;', () => escapeHtml('<img src=x onerror="alert(1)"> & \'')],
+    ['G1 map levels with a cycle stop', 'A 2, B 2', () => Array.from(computeDisciplineLevels([{ origin: 'A', destination: 'B' }, { origin: 'B', destination: 'A' }]).entries()).map((e) => e[0] + ' ' + e[1]).join(', ')],
+    ['G2 cascade with a cycle stops', 'B → A', () => {
+      const loop = [{ origin: 'A', destination: 'B', plannedDate: '20/09/2026' }, { origin: 'B', destination: 'A', plannedDate: '25/09/2026' }];
+      return findCascade(loop, loop[0], REF).map(formatRoute).join(', ');
+    }]
   ];
 
   const results = cases.map(([name, expected, run]) => {
@@ -1823,7 +1858,7 @@ function renderIndicatorsTab(k) {
     kpiCard('', t('kpi.onTime'), escapeHtml(formatPercent(k.onTimePercent)), onTimeDetail(k), 'on-time-2') +
     kpiCard('kpi-blocked', t('kpi.openBlocked'), String(k.openBlockedDays), t('kpi.openBlocked.detail'), 'open-blocked') +
     kpiCard('kpi-blocked', t('kpi.monthBlocking'), String(k.monthBlockingDays), t('kpi.monthBlocking.detail', { month: formatMonth(parseDateToDay(state.referenceDate)) }), 'month-blocking-2') +
-    kpiCard('kpi-risk', t('kpi.leadTime'), leadValue, t('kpi.leadTime.detail', { accepted: k.acceptedCount, awaiting: k.awaitingAcceptanceCount }), 'lead-time');
+    kpiCard('', t('kpi.leadTime'), leadValue, t('kpi.leadTime.detail', { accepted: k.acceptedCount, awaiting: k.awaitingAcceptanceCount }), 'lead-time');
 
   const cols = ['discipline', 'handovers', 'onTime', 'delay', 'held', 'blocking'];
   const numeric = { onTime: true, delay: true, held: true, blocking: true };

@@ -8,6 +8,8 @@ Bastão is a presentation prototype that records formal input handovers between 
 
 Published with GitHub Pages from `main` (root): https://andrecunha2004.github.io/project-dependency-prototype/
 
+Platform for the real system (pilot onwards): see `docs/adr/0001-platform-for-the-real-system.md` (status: Proposed). The prototype itself stays a static page.
+
 ## Project rules (do not break)
 
 - **One file:** the whole app is `index.html` (HTML, CSS and plain JavaScript). No frameworks, no libraries, no build step.

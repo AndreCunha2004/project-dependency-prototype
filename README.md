@@ -75,7 +75,7 @@ The acceptance tests are inside `index.html` and run automatically when the page
 
 1. Open `index.html`.
 2. Open the browser console: `F12` (or `Ctrl+Shift+J` on Chrome and Edge, `Cmd+Option+J` on Mac).
-3. Look for `Bastão acceptance tests (reference date 20/09/2026): 57 of 57 passed` and the table below it with the columns `case`, `expected`, `actual` and `pass`.
+3. Look for `Bastão acceptance tests (reference date 20/09/2026): 73 of 73 passed` and the table below it with the columns `case`, `expected`, `actual` and `pass`.
 
 Run them again with:
 
@@ -83,7 +83,7 @@ Run them again with:
 runAcceptanceTests()
 ```
 
-They cover cases A to H from the specification, the sample indicators (50.0%, 1, 2), status edge cases, the percentage format, both delay measures, blocking days in the month, lead time, indicators by discipline, cascade risk, the weekly summary, the dependency map levels, projects (handovers by project, name validation), the Portuguese texts and the share link.
+They cover cases A to H from the specification, the sample indicators (50.0%, 1, 2), status edge cases, the percentage format, both delay measures, blocking days in the month, lead time, indicators by discipline, cascade risk, the weekly summary, the dependency map levels, projects (handovers by project, name validation), form validation, history texts, escaping of typed text, dependency cycles, the Portuguese texts and the share link.
 
 ### Trying other reference dates
 
@@ -102,12 +102,32 @@ The business rules are pure functions (no access to the page): `calculateStatus`
 
 ## Publishing
 
-The repository is public, so GitHub Pages is free:
+GitHub Pages publishes `main` (root) automatically on every push. The empty `.nojekyll` file tells Pages to serve the files as they are, without a Jekyll build.
 
-1. On GitHub, open **Settings > Pages**.
-2. Under **Build and deployment**, choose **Source: Deploy from a branch**.
-3. Choose branch **main** and folder **/ (root)**, then **Save**.
-4. After one or two minutes the page is live at the address at the top of this file. Every new push to `main` updates it.
+First time only: **Settings > Pages > Source: Deploy from a branch > main / (root) > Save**.
+
+### Checklist before every push to `main`
+
+- [ ] `runAcceptanceTests()` shows `N of N passed` and the console has no errors.
+- [ ] Every tab works in English and Portuguese, at 375 px and on desktop, with no horizontal scroll.
+- [ ] Only fictional data; no names, company data or secrets in any file.
+- [ ] README updated if behavior, tests or sample data changed.
+
+### After the push
+
+- [ ] Wait one or two minutes and open the live page (use a private window to avoid the cache).
+- [ ] Smoke test: the panel shows 50.0%, 1 and 5 for the Pilot project on 20/09/2026; Declare, Deliver and Accept work; the language switch works.
+
+### Rollback
+
+If the live page is broken, undo the last commit and push again; Pages republishes the previous version:
+
+```bash
+git revert HEAD
+git push origin main
+```
+
+Roll back when the page does not load, any tab is blank, the acceptance tests fail on the live page, or the Pilot project indicators differ from the expected values.
 
 ## Project structure
 
@@ -115,6 +135,8 @@ The repository is public, so GitHub Pages is free:
 index.html                          The whole prototype: HTML, CSS and plain JavaScript in one file
 README.md                           This file
 CLAUDE.md                           Rules, skills workflow and definition of done for Claude Code sessions
+.nojekyll                           Tells GitHub Pages to serve the files without a Jekyll build
+docs/adr/                           Architecture decision records (ADR-0001: platform for the real system)
 docs/prompts/settings-menu.md       Prompt used to build the settings menu (share and language)
 docs/prompts/proposal-alignment.md  Prompt to compare the prototype with the proposal deck
 ```
