@@ -54,6 +54,6 @@ Use the skills below at the matching step. Names are the exact skill names avail
 
 ## Gotchas
 
-- Some editing tools turn `–` escape sequences into the literal character. After editing the dash test (L6), check that the source still contains the escape codes, not the dashes.
+- Some editing tools turn the escape codes for U+2013 and U+2014 into the literal characters. After editing the dash test (L6), check that the source still contains the escape codes, not the dashes.
 - `renderFlow` measures its container: it only draws when the Flow tab is visible. Call it after switching tabs.
 - The history is append-only. Never add edit or delete for history entries.
