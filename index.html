@@ -66,6 +66,42 @@
     padding: 4px 10px; border-radius: 999px;
   }
 
+  /* Settings menu (top right corner) */
+  .brand { padding-right: 56px; }
+  .settings { position: absolute; top: 0; right: 16px; z-index: 30; }
+  .settings-button {
+    width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+    background: rgba(255, 255, 255, 0.12); color: #FFFFFF;
+    display: grid; place-items: center; transition: background 0.15s, transform 0.2s;
+  }
+  .settings-button:hover { background: rgba(255, 255, 255, 0.22); }
+  .settings-button[aria-expanded="true"] { background: #FFFFFF; color: var(--primary); }
+  .settings-button[aria-expanded="true"] svg { transform: rotate(45deg); }
+  .settings-button svg { transition: transform 0.25s; }
+  .settings-button:focus-visible { outline: 3px solid rgba(255, 255, 255, 0.7); outline-offset: 2px; }
+  .settings-menu {
+    position: absolute; top: 54px; right: 0;
+    width: min(320px, calc(100vw - 32px));
+    background: var(--card); color: var(--text);
+    border-radius: var(--radius); box-shadow: 0 18px 48px rgba(0, 30, 26, 0.25);
+    padding: 18px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .settings-menu[hidden] { display: none; }
+  .settings-title { margin: 0; font-size: 16px; font-weight: 800; }
+  .settings-group { display: flex; flex-direction: column; gap: 8px; }
+  .settings-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .segmented { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: 10px; padding: 4px; gap: 4px; }
+  .segmented button {
+    border: 0; background: transparent; border-radius: 8px; padding: 8px 10px;
+    font-weight: 700; font-size: 14px; cursor: pointer; color: var(--muted);
+  }
+  .segmented button[aria-pressed="true"] { background: var(--primary); color: #FFFFFF; box-shadow: var(--shadow); }
+  .segmented button:focus-visible { outline: 3px solid rgba(0, 74, 66, 0.35); outline-offset: 1px; }
+  .settings-note { margin: 0; font-size: 12px; color: var(--muted); }
+  .settings-note.local { background: var(--risk-soft); color: #6B4A0E; border-radius: 8px; padding: 8px 10px; font-weight: 600; }
+  .manual-copy[hidden] { display: none; }
+  .manual-copy .input { font-size: 13px; }
+
   /* Cards */
   .card {
     background: var(--card);
@@ -215,6 +251,7 @@
       text-transform: uppercase; letter-spacing: 0.4px; padding-top: 2px;
     }
     .handoffs td.cell-status { order: -1; }
+    .badge { white-space: normal; }
   }
 
   @media (max-width: 560px) {
@@ -244,15 +281,51 @@
       <span class="fictional-badge" data-i18n="app.fictional">Fictional data</span>
     </div>
     <p class="tagline" data-i18n="app.tagline">Formal input handoffs between engineering disciplines.</p>
+
+    <div class="settings" id="settings">
+      <button id="settings-button" class="settings-button" type="button"
+              aria-haspopup="true" aria-expanded="false" aria-controls="settings-menu"
+              aria-label="Settings" data-i18n-aria-label="settings.open">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+      <div id="settings-menu" class="settings-menu" role="dialog" aria-labelledby="settings-title" hidden>
+        <h2 class="settings-title" id="settings-title" data-i18n="settings.title">Settings</h2>
+
+        <div class="settings-group" role="group" aria-labelledby="language-label">
+          <span class="settings-label" id="language-label" data-i18n="settings.language">Language</span>
+          <div class="segmented">
+            <button type="button" data-lang="en" aria-pressed="true">English</button>
+            <button type="button" data-lang="pt" aria-pressed="false" lang="pt-BR">Português</button>
+          </div>
+        </div>
+
+        <div class="settings-group" role="group" aria-labelledby="share-label">
+          <span class="settings-label" id="share-label" data-i18n="settings.share">Share</span>
+          <button id="share-button" class="btn btn-primary" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg>
+            <span data-i18n="settings.shareButton">Share this page</span>
+          </button>
+          <div class="field manual-copy" id="manual-copy" hidden>
+            <label for="share-link" data-i18n="settings.copyManual">Copy the link below.</label>
+            <input id="share-link" class="input" type="text" readonly>
+          </div>
+          <p class="settings-note" data-i18n="settings.shareNote">Only the link is shared. Handoffs typed on this page are not.</p>
+          <p class="settings-note local" id="local-file-note" data-i18n="settings.localFile" hidden></p>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
 <main class="page">
-  <section class="card toolbar" aria-label="Controls">
+  <section class="card toolbar" aria-label="Controls" data-i18n-aria-label="aria.controls">
     <div class="field">
       <label for="reference-date" data-i18n="ref.label">Reference date</label>
       <input id="reference-date" class="input ref-input" type="text" inputmode="numeric" autocomplete="off"
-             placeholder="DD/MM/YYYY" maxlength="10" aria-describedby="reference-hint reference-error">
+             placeholder="DD/MM/YYYY" data-i18n-placeholder="date.placeholder" maxlength="10" aria-describedby="reference-hint reference-error">
       <span id="reference-hint" class="hint" data-i18n="ref.help">Every status is calculated against this date instead of today.</span>
       <span id="reference-error" class="error" role="alert"></span>
     </div>
@@ -262,7 +335,7 @@
     </button>
   </section>
 
-  <section class="kpis" aria-label="Indicators" id="kpis"></section>
+  <section class="kpis" aria-label="Indicators" data-i18n-aria-label="aria.indicators" id="kpis"></section>
 
   <section class="card section" aria-labelledby="handoffs-title">
     <div class="card-head">
@@ -318,7 +391,7 @@
       </div>
       <div class="field">
         <label for="f-planned"><span data-i18n="col.planned">Planned date</span> <span class="required">*</span></label>
-        <input id="f-planned" name="plannedDate" class="input date-input" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" required>
+        <input id="f-planned" name="plannedDate" class="input date-input" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" data-i18n-placeholder="date.placeholder" maxlength="10" autocomplete="off" required>
         <span class="error" data-error-for="plannedDate"></span>
       </div>
       <div class="field">
@@ -341,7 +414,7 @@
     <p class="dialog-context" id="date-context"></p>
     <div class="field">
       <label for="f-action-date" id="date-label"></label>
-      <input id="f-action-date" name="actionDate" class="input date-input" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" required>
+      <input id="f-action-date" name="actionDate" class="input date-input" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" data-i18n-placeholder="date.placeholder" maxlength="10" autocomplete="off" required>
       <span class="hint" id="date-hint"></span>
       <span class="error" data-error-for="actionDate"></span>
     </div>
@@ -450,9 +523,139 @@ const TEXT = {
     'error.date': 'Use a valid date in the DD/MM/YYYY format.',
     'error.sameDiscipline': 'Origin and destination must be different.',
     'error.afterReference': 'Cannot be after the reference date ({ref}).',
-    'error.beforeDelivery': 'Cannot be before the delivery date ({delivery}).'
+    'error.beforeDelivery': 'Cannot be before the delivery date ({delivery}).',
+    'app.documentTitle': 'Bastão: input handoffs between disciplines',
+    'aria.controls': 'Controls',
+    'aria.indicators': 'Indicators',
+    'date.placeholder': 'DD/MM/YYYY',
+    'settings.open': 'Settings',
+    'settings.title': 'Settings',
+    'settings.language': 'Language',
+    'settings.share': 'Share',
+    'settings.shareButton': 'Share this page',
+    'settings.shareText': 'Bastão prototype: input handoffs between engineering disciplines (fictional data).',
+    'settings.shareNote': 'Only the link is shared. Handoffs typed on this page are not.',
+    'settings.localFile': 'This page is open from a file on this computer, so the link only works here. Publish it (for example with GitHub Pages) to share it with other people.',
+    'settings.shared': 'Link shared.',
+    'settings.copied': 'Link copied.',
+    'settings.copyManual': 'Copy the link below.'
+  },
+
+  // Brazilian Portuguese: interface text only. User data (disciplines, inputs, owners) is not translated.
+  pt: {
+    'app.title': 'Bastão',
+    'app.fictional': 'Dados fictícios',
+    'app.tagline': 'Passagem formal de inputs entre disciplinas de engenharia.',
+    'app.prototypeNote': 'Protótipo apenas para apresentação. Os dados ficam nesta página e voltam aos exemplos fictícios ao recarregar.',
+    'ref.label': 'Data de referência',
+    'ref.help': 'Todos os status são calculados com esta data no lugar de hoje.',
+    'ref.invalid': 'Use uma data válida no formato DD/MM/AAAA. Os status continuam usando {ref}.',
+    'action.declare': 'Declarar passagem',
+    'action.deliver': 'Entregar',
+    'action.accept': 'Aceitar',
+    'action.cancel': 'Cancelar',
+    'kpi.onTime': 'Entregas no prazo',
+    'kpi.onTime.detail': '{onTime} de {delivered} entregas até a data planejada',
+    'kpi.onTime.empty': 'Nenhuma entrega ainda',
+    'kpi.blocked': 'Passagens bloqueadas',
+    'kpi.blocked.detail': 'Não entregues e com a data planejada vencida',
+    'kpi.blockedDays': 'Dias bloqueados em aberto',
+    'kpi.blockedDays.detail': 'Soma dos dias de bloqueio das passagens ainda não entregues',
+    'kpi.na': 'N/D',
+    'list.title': 'Passagens',
+    'list.count.one': '{n} passagem',
+    'list.count.other': '{n} passagens',
+    'list.empty': 'Nenhuma passagem ainda. Use Declarar passagem para adicionar.',
+    'col.origin': 'Origem',
+    'col.destination': 'Destino',
+    'col.input': 'Input',
+    'col.planned': 'Data planejada',
+    'col.delivery': 'Data de entrega',
+    'col.acceptance': 'Data de aceite',
+    'col.owner': 'Responsável',
+    'col.status': 'Status',
+    'col.actions': 'Ações',
+    'value.notSet': 'Não definida',
+    'value.noOwner': 'Sem responsável',
+    'value.accepted': 'Aceito pelo destino',
+    'value.noActions': 'Nenhuma ação pendente',
+    'status.onTime': 'No prazo',
+    'status.atRisk': 'Em risco',
+    'status.blocked.one': 'Bloqueado, {n} dia',
+    'status.blocked.other': 'Bloqueado, {n} dias',
+    'status.deliveredOnTime': 'Entregue, no prazo',
+    'status.deliveredLate.one': 'Entregue, {n} dia de atraso',
+    'status.deliveredLate.other': 'Entregue, {n} dias de atraso',
+    'status.missingPlanned': 'Data planejada ausente',
+    'warning.delivery-after-reference': 'A data de entrega é posterior à data de referência, então não conta como entregue.',
+    'warning.acceptance-after-reference': 'A data de aceite é posterior à data de referência, então o aceite é ignorado.',
+    'warning.acceptance-before-delivery': 'A data de aceite é anterior à data de entrega, então o aceite é ignorado.',
+    'warning.acceptance-without-delivery': 'O aceite não tem uma entrega válida, então é ignorado.',
+    'warning.invalid-delivery-date': 'A data de entrega não é uma data válida no formato DD/MM/AAAA.',
+    'warning.invalid-acceptance-date': 'A data de aceite não é uma data válida no formato DD/MM/AAAA.',
+    'history.title': 'Histórico',
+    'history.sub': 'Cada declaração, entrega e aceite, do mais recente para o mais antigo.',
+    'history.readonly': 'Somente leitura',
+    'history.sample': 'Fictício',
+    'history.declared': 'Passagem declarada: {origin} para {destination}, "{input}". Data planejada {date}.',
+    'history.delivered': 'Entrega registrada: {origin} para {destination}, "{input}". Data de entrega {date}.',
+    'history.accepted': 'Aceite registrado: {destination} aceitou "{input}" de {origin}. Data de aceite {date}.',
+    'declare.title': 'Declarar passagem',
+    'declare.hint': 'A entrega e o aceite são registrados depois, pelos botões Entregar e Aceitar.',
+    'declare.submit': 'Declarar',
+    'declare.done': 'Passagem declarada.',
+    'deliver.title': 'Registrar entrega',
+    'deliver.label': 'Data de entrega',
+    'deliver.hint': 'Não pode ser posterior à data de referência ({ref}).',
+    'deliver.submit': 'Registrar entrega',
+    'deliver.done': 'Entrega registrada.',
+    'accept.title': 'Registrar aceite',
+    'accept.label': 'Data de aceite',
+    'accept.hint': 'Entre a data de entrega ({delivery}) e a data de referência ({ref}).',
+    'accept.submit': 'Registrar aceite',
+    'accept.done': 'Aceite registrado.',
+    'dialog.context': '{origin} para {destination}: {input}',
+    'error.required': 'Campo obrigatório.',
+    'error.date': 'Use uma data válida no formato DD/MM/AAAA.',
+    'error.sameDiscipline': 'Origem e destino precisam ser diferentes.',
+    'error.afterReference': 'Não pode ser posterior à data de referência ({ref}).',
+    'error.beforeDelivery': 'Não pode ser anterior à data de entrega ({delivery}).',
+    'app.documentTitle': 'Bastão: passagem de inputs entre disciplinas',
+    'aria.controls': 'Controles',
+    'aria.indicators': 'Indicadores',
+    'date.placeholder': 'DD/MM/AAAA',
+    'settings.open': 'Configurações',
+    'settings.title': 'Configurações',
+    'settings.language': 'Idioma',
+    'settings.share': 'Compartilhar',
+    'settings.shareButton': 'Compartilhar esta página',
+    'settings.shareText': 'Protótipo Bastão: passagem de inputs entre disciplinas de engenharia (dados fictícios).',
+    'settings.shareNote': 'Só o link é compartilhado. As passagens digitadas nesta página não vão junto.',
+    'settings.localFile': 'Esta página está aberta a partir de um arquivo deste computador, então o link só funciona aqui. Publique a página (por exemplo, no GitHub Pages) para compartilhar com outras pessoas.',
+    'settings.shared': 'Link compartilhado.',
+    'settings.copied': 'Link copiado.',
+    'settings.copyManual': 'Copie o link abaixo.'
   }
 };
+
+const SUPPORTED_LANGS = ['en', 'pt'];
+const HTML_LANG = { en: 'en', pt: 'pt-BR' };
+
+function normalizeLang(value) {
+  return SUPPORTED_LANGS.indexOf(value) >= 0 ? value : 'en';
+}
+
+/**
+ * Link to share: the current page address with ?lang=pt when the page is in
+ * Portuguese (English is the default, so it needs no parameter). Pure function.
+ */
+function buildShareUrl(href, lang) {
+  const url = new URL(href);
+  url.hash = '';
+  if (normalizeLang(lang) === 'en') url.searchParams.delete('lang');
+  else url.searchParams.set('lang', lang);
+  return url.toString();
+}
 
 let currentLang = 'en';
 
@@ -744,7 +947,23 @@ function runAcceptanceTests() {
     ['X10 KPI, reference 15/09', 'N/A on time | 1 blocked | 3 open blocked days', () => indicatorsText(SAMPLE_ITEMS, '15/09/2026')],
     ['X11 invalid date 31/02', 'null', () => String(parseDateToDay('31/02/2026'))],
     ['X12 date round trip', '20/09/2026', () => formatDay(parseDateToDay('20/09/2026'))],
-    ['X13 days across months', '18', () => String(daysBetween('25/08/2026', '12/09/2026'))]
+    ['X13 days across months', '18', () => String(daysBetween('25/08/2026', '12/09/2026'))],
+    // Language and share (settings menu)
+    ['L1 Portuguese blocked', 'Bloqueado, 2 dias', () => formatStatusLabel(calculateStatus(item('18/09/2026'), REF), 'pt')],
+    ['L2 Portuguese late', 'Entregue, 6 dias de atraso', () => formatStatusLabel(calculateStatus(item('12/09/2026', '18/09/2026'), REF), 'pt')],
+    ['L3 Portuguese at risk', 'Em risco', () => formatStatusLabel(calculateStatus(item('20/09/2026'), REF), 'pt')],
+    ['L4 Portuguese missing date', 'Data planejada ausente', () => formatStatusLabel(calculateStatus(item(''), REF), 'pt')],
+    ['L5 Portuguese has every key', 'no missing keys', () => {
+      const missing = Object.keys(TEXT.en).filter((key) => !(key in TEXT.pt));
+      return missing.length ? 'missing: ' + missing.join(', ') : 'no missing keys';
+    }],
+    ['L6 no em or en dash', 'no dashes', () => {
+      const found = SUPPORTED_LANGS.reduce((list, lang) =>
+        list.concat(Object.keys(TEXT[lang]).filter((key) => /[\u2013\u2014]/.test(TEXT[lang][key])).map((key) => lang + ':' + key)), []);
+      return found.length ? 'found: ' + found.join(', ') : 'no dashes';
+    }],
+    ['S1 share link in Portuguese', 'file:///project/index.html?lang=pt', () => buildShareUrl('file:///project/index.html#history', 'pt')],
+    ['S2 share link in English', 'https://example.org/index.html', () => buildShareUrl('https://example.org/index.html?lang=pt', 'en')]
   ];
 
   const results = cases.map(([name, expected, run]) => {
@@ -826,6 +1045,12 @@ function badgeClass(result) {
 function applyStaticText() {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach((el) => {
+    el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
   });
 }
 
@@ -1080,11 +1305,110 @@ function setupDialogClosing() {
 }
 
 /* =====================================================================
-   7. Start
+   7. Settings menu: language and share
    ===================================================================== */
 
-function init() {
+function setLanguage(lang) {
+  currentLang = normalizeLang(lang);
+  document.documentElement.lang = HTML_LANG[currentLang];
+  document.title = t('app.documentTitle');
   applyStaticText();
+  document.querySelectorAll('[data-lang]').forEach((b) => {
+    b.setAttribute('aria-pressed', b.dataset.lang === currentLang ? 'true' : 'false');
+  });
+  // Keep the language in the address so a shared link opens in the same language.
+  try { history.replaceState(null, '', buildShareUrl(location.href, currentLang)); } catch (error) { /* some browsers block this for local files */ }
+  if ($('reference-date').getAttribute('aria-invalid') === 'true') {
+    $('reference-error').textContent = t('ref.invalid', { ref: state.referenceDate });
+  }
+  render();
+}
+
+function openSettings() {
+  $('settings-menu').hidden = false;
+  $('settings-button').setAttribute('aria-expanded', 'true');
+  $('manual-copy').hidden = true;
+  const active = document.querySelector('[data-lang][aria-pressed="true"]');
+  if (active) active.focus();
+}
+
+function closeSettings(returnFocus) {
+  if ($('settings-menu').hidden) return;
+  $('settings-menu').hidden = true;
+  $('settings-button').setAttribute('aria-expanded', 'false');
+  if (returnFocus) $('settings-button').focus();
+}
+
+/** Native share sheet, then clipboard, then a field to copy by hand. */
+async function shareCurrentPage() {
+  const url = buildShareUrl(location.href, currentLang);
+  if (typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ title: t('app.documentTitle'), text: t('settings.shareText'), url: url });
+      closeSettings(true);
+      showToast(t('settings.shared'));
+      return;
+    } catch (error) {
+      if (error && error.name === 'AbortError') return; // the user closed the share sheet
+    }
+  }
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    try {
+      await navigator.clipboard.writeText(url);
+      closeSettings(true);
+      showToast(t('settings.copied'));
+      return;
+    } catch (error) { /* fall back to manual copy */ }
+  }
+  const field = $('share-link');
+  field.value = url;
+  $('manual-copy').hidden = false;
+  field.focus();
+  field.select();
+}
+
+function setupSettings() {
+  $('local-file-note').hidden = location.protocol !== 'file:';
+
+  $('settings-button').addEventListener('click', () => {
+    if ($('settings-menu').hidden) openSettings();
+    else closeSettings(true);
+  });
+
+  document.querySelectorAll('[data-lang]').forEach((button) => {
+    button.addEventListener('click', () => {
+      setLanguage(button.dataset.lang);
+      closeSettings(true);
+    });
+  });
+
+  $('share-button').addEventListener('click', shareCurrentPage);
+
+  document.addEventListener('click', (event) => {
+    if (!$('settings').contains(event.target)) closeSettings(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !$('settings-menu').hidden) closeSettings(true);
+  });
+}
+
+/* =====================================================================
+   8. Start
+   ===================================================================== */
+
+function readLanguageFromUrl() {
+  try { return normalizeLang(new URLSearchParams(location.search).get('lang')); } catch (error) { return 'en'; }
+}
+
+function init() {
+  currentLang = readLanguageFromUrl();
+  document.documentElement.lang = HTML_LANG[currentLang];
+  document.title = t('app.documentTitle');
+  applyStaticText();
+  document.querySelectorAll('[data-lang]').forEach((b) => {
+    b.setAttribute('aria-pressed', b.dataset.lang === currentLang ? 'true' : 'false');
+  });
+  setupSettings();
   loadSampleData();
   setupReferenceDate();
   setupDeclareDialog();
