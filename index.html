@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bastão: input handoffs between disciplines</title>
+<title>Bastão: input handovers between disciplines</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -155,16 +155,16 @@
   .kpi-ontime { --kpi-color: var(--primary); }
   .kpi-blocked { --kpi-color: var(--blocked); }
 
-  /* Handoff table */
+  /* Handover table */
   .table-wrap { width: 100%; overflow-x: auto; }
-  table.handoffs { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .handoffs th {
+  table.handovers { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .handovers th {
     text-align: left; font-size: 12px; font-weight: 700; color: var(--muted);
     text-transform: uppercase; letter-spacing: 0.4px;
     padding: 10px 10px; border-bottom: 1.5px solid var(--line); white-space: nowrap;
   }
-  .handoffs td { padding: 14px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: break-word; }
-  .handoffs tr:last-child td { border-bottom: 0; }
+  .handovers td { padding: 14px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: break-word; }
+  .handovers tr:last-child td { border-bottom: 0; }
   .route { font-weight: 600; }
   .muted { color: var(--muted); }
   .date-cell { white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -230,27 +230,27 @@
   @media (max-width: 960px) {
     .kpis { grid-template-columns: 1fr; gap: 12px; }
     .kpi-value { font-size: 34px; }
-    .handoffs thead { display: none; }
-    .handoffs, .handoffs tbody, .handoffs tr, .handoffs td { display: block; width: 100%; }
+    .handovers thead { display: none; }
+    .handovers, .handovers tbody, .handovers tr, .handovers td { display: block; width: 100%; }
     .table-wrap { overflow-x: visible; }
-    .handoffs tr {
+    .handovers tr {
       display: flex; flex-direction: column;
       border: 1px solid var(--line); border-radius: 12px;
       padding: 8px 14px; margin-bottom: 12px;
     }
-    .handoffs td { overflow-wrap: anywhere; }
-    .handoffs td {
+    .handovers td { overflow-wrap: anywhere; }
+    .handovers td {
       display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 10px;
       padding: 7px 0; border-bottom: 1px dashed var(--line);
     }
-    .handoffs tr td:last-child { border-bottom: 0; }
-    .handoffs tr td.cell-status { border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 2px; }
-    .handoffs td::before {
+    .handovers tr td:last-child { border-bottom: 0; }
+    .handovers tr td.cell-status { border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 2px; }
+    .handovers td::before {
       content: attr(data-label);
       font-size: 11.5px; font-weight: 700; color: var(--muted);
       text-transform: uppercase; letter-spacing: 0.4px; padding-top: 2px;
     }
-    .handoffs td.cell-status { order: -1; }
+    .handovers td.cell-status { order: -1; }
     .badge { white-space: normal; }
   }
 
@@ -280,7 +280,7 @@
       <h1 data-i18n="app.title">Bastão</h1>
       <span class="fictional-badge" data-i18n="app.fictional">Fictional data</span>
     </div>
-    <p class="tagline" data-i18n="app.tagline">Formal input handoffs between engineering disciplines.</p>
+    <p class="tagline" data-i18n="app.tagline">Formal input handovers between engineering disciplines.</p>
 
     <div class="settings" id="settings">
       <button id="settings-button" class="settings-button" type="button"
@@ -312,7 +312,7 @@
             <label for="share-link" data-i18n="settings.copyManual">Copy the link below.</label>
             <input id="share-link" class="input" type="text" readonly>
           </div>
-          <p class="settings-note" data-i18n="settings.shareNote">Only the link is shared. Handoffs typed on this page are not.</p>
+          <p class="settings-note" data-i18n="settings.shareNote">Only the link is shared. Handovers typed on this page are not.</p>
           <p class="settings-note local" id="local-file-note" data-i18n="settings.localFile" hidden></p>
         </div>
       </div>
@@ -331,23 +331,23 @@
     </div>
     <button id="declare-button" class="btn btn-primary" type="button">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
-      <span data-i18n="action.declare">Declare handoff</span>
+      <span data-i18n="action.declare">Declare handover</span>
     </button>
   </section>
 
   <section class="kpis" aria-label="Indicators" data-i18n-aria-label="aria.indicators" id="kpis"></section>
 
-  <section class="card section" aria-labelledby="handoffs-title">
+  <section class="card section" aria-labelledby="handovers-title">
     <div class="card-head">
       <div>
-        <h2 class="card-title" id="handoffs-title" data-i18n="list.title">Handoffs</h2>
-        <p class="card-sub" id="handoffs-count"></p>
+        <h2 class="card-title" id="handovers-title" data-i18n="list.title">Handovers</h2>
+        <p class="card-sub" id="handovers-count"></p>
       </div>
     </div>
     <div class="table-wrap">
-      <table class="handoffs">
-        <thead><tr id="handoffs-head"></tr></thead>
-        <tbody id="handoffs-body"></tbody>
+      <table class="handovers">
+        <thead><tr id="handovers-head"></tr></thead>
+        <tbody id="handovers-body"></tbody>
       </table>
     </div>
   </section>
@@ -369,10 +369,10 @@
   <p class="footer-note" data-i18n="app.prototypeNote">Prototype for presentation only. Data lives in this page and resets to the fictional examples on reload.</p>
 </main>
 
-<!-- Declare handoff dialog -->
+<!-- Declare handover dialog -->
 <dialog id="declare-dialog" aria-labelledby="declare-title">
   <form id="declare-form" class="dialog-body" novalidate>
-    <h2 class="dialog-title" id="declare-title" data-i18n="declare.title">Declare handoff</h2>
+    <h2 class="dialog-title" id="declare-title" data-i18n="declare.title">Declare handover</h2>
     <div class="form-grid">
       <div class="field">
         <label for="f-origin"><span data-i18n="col.origin">Origin</span> <span class="required">*</span></label>
@@ -449,27 +449,27 @@ const TEXT = {
   en: {
     'app.title': 'Bastão',
     'app.fictional': 'Fictional data',
-    'app.tagline': 'Formal input handoffs between engineering disciplines.',
+    'app.tagline': 'Formal input handovers between engineering disciplines.',
     'app.prototypeNote': 'Prototype for presentation only. Data lives in this page and resets to the fictional examples on reload.',
     'ref.label': 'Reference date',
     'ref.help': 'Every status is calculated against this date instead of today.',
     'ref.invalid': 'Use a valid date in the DD/MM/YYYY format. Statuses still use {ref}.',
-    'action.declare': 'Declare handoff',
+    'action.declare': 'Declare handover',
     'action.deliver': 'Deliver',
     'action.accept': 'Accept',
     'action.cancel': 'Cancel',
     'kpi.onTime': 'On-time deliveries',
     'kpi.onTime.detail': '{onTime} of {delivered} deliveries on or before the planned date',
     'kpi.onTime.empty': 'No deliveries yet',
-    'kpi.blocked': 'Blocked handoffs',
+    'kpi.blocked': 'Blocked handovers',
     'kpi.blocked.detail': 'Not delivered and past the planned date',
     'kpi.blockedDays': 'Open blocked days',
-    'kpi.blockedDays.detail': 'Sum of blocked days of handoffs not yet delivered',
+    'kpi.blockedDays.detail': 'Sum of blocked days of handovers not yet delivered',
     'kpi.na': 'N/A',
-    'list.title': 'Handoffs',
-    'list.count.one': '{n} handoff',
-    'list.count.other': '{n} handoffs',
-    'list.empty': 'No handoffs yet. Use Declare handoff to add one.',
+    'list.title': 'Handovers',
+    'list.count.one': '{n} handover',
+    'list.count.other': '{n} handovers',
+    'list.empty': 'No handovers yet. Use Declare handover to add one.',
     'col.origin': 'Origin',
     'col.destination': 'Destination',
     'col.input': 'Input',
@@ -501,13 +501,13 @@ const TEXT = {
     'history.sub': 'Every declaration, delivery and acceptance, newest first.',
     'history.readonly': 'Read only',
     'history.sample': 'Fictional',
-    'history.declared': 'Handoff declared: {origin} to {destination}, "{input}". Planned date {date}.',
+    'history.declared': 'Handover declared: {origin} to {destination}, "{input}". Planned date {date}.',
     'history.delivered': 'Delivery recorded: {origin} to {destination}, "{input}". Delivery date {date}.',
     'history.accepted': 'Acceptance recorded: {destination} accepted "{input}" from {origin}. Acceptance date {date}.',
-    'declare.title': 'Declare handoff',
+    'declare.title': 'Declare handover',
     'declare.hint': 'Delivery and acceptance are recorded later with the Deliver and Accept buttons.',
     'declare.submit': 'Declare',
-    'declare.done': 'Handoff declared.',
+    'declare.done': 'Handover declared.',
     'deliver.title': 'Record delivery',
     'deliver.label': 'Delivery date',
     'deliver.hint': 'Cannot be after the reference date ({ref}).',
@@ -524,7 +524,7 @@ const TEXT = {
     'error.sameDiscipline': 'Origin and destination must be different.',
     'error.afterReference': 'Cannot be after the reference date ({ref}).',
     'error.beforeDelivery': 'Cannot be before the delivery date ({delivery}).',
-    'app.documentTitle': 'Bastão: input handoffs between disciplines',
+    'app.documentTitle': 'Bastão: input handovers between disciplines',
     'aria.controls': 'Controls',
     'aria.indicators': 'Indicators',
     'date.placeholder': 'DD/MM/YYYY',
@@ -533,39 +533,40 @@ const TEXT = {
     'settings.language': 'Language',
     'settings.share': 'Share',
     'settings.shareButton': 'Share this page',
-    'settings.shareText': 'Bastão prototype: input handoffs between engineering disciplines (fictional data).',
-    'settings.shareNote': 'Only the link is shared. Handoffs typed on this page are not.',
+    'settings.shareText': 'Bastão prototype: input handovers between engineering disciplines (fictional data).',
+    'settings.shareNote': 'Only the link is shared. Handovers typed on this page are not.',
     'settings.localFile': 'This page is open from a file on this computer, so the link only works here. Publish it (for example with GitHub Pages) to share it with other people.',
     'settings.shared': 'Link shared.',
     'settings.copied': 'Link copied.',
-    'settings.copyManual': 'Copy the link below.'
+    'settings.copyManual': 'Copy the link below.',
+    'format.decimal': '.'
   },
 
   // Brazilian Portuguese: interface text only. User data (disciplines, inputs, owners) is not translated.
   pt: {
     'app.title': 'Bastão',
     'app.fictional': 'Dados fictícios',
-    'app.tagline': 'Passagem formal de inputs entre disciplinas de engenharia.',
+    'app.tagline': 'Handover formal de inputs entre disciplinas de engenharia.',
     'app.prototypeNote': 'Protótipo apenas para apresentação. Os dados ficam nesta página e voltam aos exemplos fictícios ao recarregar.',
     'ref.label': 'Data de referência',
     'ref.help': 'Todos os status são calculados com esta data no lugar de hoje.',
     'ref.invalid': 'Use uma data válida no formato DD/MM/AAAA. Os status continuam usando {ref}.',
-    'action.declare': 'Declarar passagem',
+    'action.declare': 'Declarar handover',
     'action.deliver': 'Entregar',
     'action.accept': 'Aceitar',
     'action.cancel': 'Cancelar',
     'kpi.onTime': 'Entregas no prazo',
     'kpi.onTime.detail': '{onTime} de {delivered} entregas até a data planejada',
     'kpi.onTime.empty': 'Nenhuma entrega ainda',
-    'kpi.blocked': 'Passagens bloqueadas',
+    'kpi.blocked': 'Handovers bloqueados',
     'kpi.blocked.detail': 'Não entregues e com a data planejada vencida',
     'kpi.blockedDays': 'Dias bloqueados em aberto',
-    'kpi.blockedDays.detail': 'Soma dos dias de bloqueio das passagens ainda não entregues',
-    'kpi.na': 'N/D',
-    'list.title': 'Passagens',
-    'list.count.one': '{n} passagem',
-    'list.count.other': '{n} passagens',
-    'list.empty': 'Nenhuma passagem ainda. Use Declarar passagem para adicionar.',
+    'kpi.blockedDays.detail': 'Soma dos dias de bloqueio dos handovers ainda não entregues',
+    'kpi.na': 'N/A',
+    'list.title': 'Handovers',
+    'list.count.one': '{n} handover',
+    'list.count.other': '{n} handovers',
+    'list.empty': 'Nenhum handover ainda. Use Declarar handover para adicionar.',
     'col.origin': 'Origem',
     'col.destination': 'Destino',
     'col.input': 'Input',
@@ -597,13 +598,13 @@ const TEXT = {
     'history.sub': 'Cada declaração, entrega e aceite, do mais recente para o mais antigo.',
     'history.readonly': 'Somente leitura',
     'history.sample': 'Fictício',
-    'history.declared': 'Passagem declarada: {origin} para {destination}, "{input}". Data planejada {date}.',
+    'history.declared': 'Handover declarado: {origin} para {destination}, "{input}". Data planejada {date}.',
     'history.delivered': 'Entrega registrada: {origin} para {destination}, "{input}". Data de entrega {date}.',
     'history.accepted': 'Aceite registrado: {destination} aceitou "{input}" de {origin}. Data de aceite {date}.',
-    'declare.title': 'Declarar passagem',
+    'declare.title': 'Declarar handover',
     'declare.hint': 'A entrega e o aceite são registrados depois, pelos botões Entregar e Aceitar.',
     'declare.submit': 'Declarar',
-    'declare.done': 'Passagem declarada.',
+    'declare.done': 'Handover declarado.',
     'deliver.title': 'Registrar entrega',
     'deliver.label': 'Data de entrega',
     'deliver.hint': 'Não pode ser posterior à data de referência ({ref}).',
@@ -620,7 +621,7 @@ const TEXT = {
     'error.sameDiscipline': 'Origem e destino precisam ser diferentes.',
     'error.afterReference': 'Não pode ser posterior à data de referência ({ref}).',
     'error.beforeDelivery': 'Não pode ser anterior à data de entrega ({delivery}).',
-    'app.documentTitle': 'Bastão: passagem de inputs entre disciplinas',
+    'app.documentTitle': 'Bastão: handover de inputs entre disciplinas',
     'aria.controls': 'Controles',
     'aria.indicators': 'Indicadores',
     'date.placeholder': 'DD/MM/AAAA',
@@ -629,12 +630,13 @@ const TEXT = {
     'settings.language': 'Idioma',
     'settings.share': 'Compartilhar',
     'settings.shareButton': 'Compartilhar esta página',
-    'settings.shareText': 'Protótipo Bastão: passagem de inputs entre disciplinas de engenharia (dados fictícios).',
-    'settings.shareNote': 'Só o link é compartilhado. As passagens digitadas nesta página não vão junto.',
+    'settings.shareText': 'Protótipo Bastão: handover de inputs entre disciplinas de engenharia (dados fictícios).',
+    'settings.shareNote': 'Só o link é compartilhado. Os handovers digitados nesta página não vão junto.',
     'settings.localFile': 'Esta página está aberta a partir de um arquivo deste computador, então o link só funciona aqui. Publique a página (por exemplo, no GitHub Pages) para compartilhar com outras pessoas.',
     'settings.shared': 'Link compartilhado.',
     'settings.copied': 'Link copiado.',
-    'settings.copyManual': 'Copie o link abaixo.'
+    'settings.copyManual': 'Copie o link abaixo.',
+    'format.decimal': ','
   }
 };
 
@@ -730,7 +732,7 @@ function daysBetween(fromText, toText) {
 }
 
 /**
- * Calculates the status of one handoff on the reference date.
+ * Calculates the status of one handover on the reference date.
  * Rules, first match wins:
  *   0. Planned date empty or invalid: "Missing planned date", nothing else is calculated.
  *   1. Valid delivery date: Delivered (on time if delivery <= planned, else X days late).
@@ -817,8 +819,8 @@ function formatStatusLabel(result, lang) {
 /**
  * Panel indicators.
  *   onTimePercent   = on-time deliveries / all deliveries (null when there are no deliveries)
- *   blockedCount    = handoffs with status Blocked
- *   openBlockedDays = sum of blocked days of handoffs not yet delivered
+ *   blockedCount    = handovers with status Blocked
+ *   openBlockedDays = sum of blocked days of handovers not yet delivered
  */
 function calculateIndicators(items, referenceDate) {
   let delivered = 0;
@@ -838,17 +840,20 @@ function calculateIndicators(items, referenceDate) {
   return {
     deliveredCount: delivered,
     onTimeCount: onTime,
-    onTimePercent: delivered === 0 ? null : Math.round((onTime / delivered) * 100),
+    // One decimal place, for example 2 of 3 = 66.7
+    onTimePercent: delivered === 0 ? null : Math.round((onTime / delivered) * 1000) / 10,
     blockedCount: blockedCount,
     openBlockedDays: openBlockedDays
   };
 }
 
+/** 66.7 -> "66.7%" in English or "66,7%" in Portuguese; null -> "N/A". */
 function formatPercent(value, lang) {
-  return value === null ? t('kpi.na', null, lang) : value + '%';
+  if (value === null) return t('kpi.na', null, lang);
+  return value.toFixed(1).replace('.', t('format.decimal', null, lang)) + '%';
 }
 
-/** Validation for the "Declare handoff" form. Returns { field: errorKey }. */
+/** Validation for the "Declare handover" form. Returns { field: errorKey }. */
 function validateDeclaration(data) {
   const errors = {};
   ['origin', 'destination', 'input', 'plannedDate'].forEach((field) => {
@@ -929,7 +934,7 @@ function runAcceptanceTests() {
     ['F', 'Blocked, 3 days', () => statusWithWarnings(item('12/09/2026'), '15/09/2026')],
     ['G', 'Delivered, on time', () => statusWithWarnings(item('20/09/2026', '20/09/2026'), REF)],
     ['H', 'Missing planned date', () => statusWithWarnings(item(''), REF)],
-    ['KPI sample data', '50% on time | 1 blocked | 2 open blocked days', () => indicatorsText(SAMPLE_ITEMS, REF)],
+    ['KPI sample data', '50.0% on time | 1 blocked | 2 open blocked days', () => indicatorsText(SAMPLE_ITEMS, REF)],
     // Extra edge cases
     ['X1 at risk, 2 days ahead', 'At risk', () => statusWithWarnings(item('22/09/2026'), REF)],
     ['X2 on time, 3 days ahead', 'On time', () => statusWithWarnings(item('23/09/2026'), REF)],
@@ -945,6 +950,10 @@ function runAcceptanceTests() {
     ['X9 KPI without deliveries', 'N/A on time | 1 blocked | 2 open blocked days', () => indicatorsText([item('18/09/2026'), item('25/09/2026')], REF)],
     // On 15/09 both sample deliveries (18/09 and 19/09) are in the future, so none counts.
     ['X10 KPI, reference 15/09', 'N/A on time | 1 blocked | 3 open blocked days', () => indicatorsText(SAMPLE_ITEMS, '15/09/2026')],
+    ['P1 percent, one decimal', '66.7%', () => formatPercent(calculateIndicators([item('28/09/2026', '19/09/2026'), item('20/09/2026', '20/09/2026'), item('12/09/2026', '18/09/2026')], REF).onTimePercent, 'en')],
+    ['P2 percent in Portuguese', '66,7%', () => formatPercent(66.7, 'pt')],
+    ['P3 percent, whole value', '100.0%', () => formatPercent(100, 'en')],
+    ['P4 N/A in Portuguese', 'N/A', () => formatPercent(null, 'pt')],
     ['X11 invalid date 31/02', 'null', () => String(parseDateToDay('31/02/2026'))],
     ['X12 date round trip', '20/09/2026', () => formatDay(parseDateToDay('20/09/2026'))],
     ['X13 days across months', '18', () => String(daysBetween('25/08/2026', '12/09/2026'))],
@@ -1079,12 +1088,12 @@ function renderIndicators() {
 
 const COLUMNS = ['origin', 'destination', 'input', 'planned', 'delivery', 'acceptance', 'owner', 'status', 'actions'];
 
-function renderHandoffs() {
-  $('handoffs-head').innerHTML = COLUMNS.map((c) => '<th scope="col">' + escapeHtml(t('col.' + c)) + '</th>').join('');
-  $('handoffs-count').textContent = tPlural('list.count', state.items.length);
+function renderHandovers() {
+  $('handovers-head').innerHTML = COLUMNS.map((c) => '<th scope="col">' + escapeHtml(t('col.' + c)) + '</th>').join('');
+  $('handovers-count').textContent = tPlural('list.count', state.items.length);
 
   if (state.items.length === 0) {
-    $('handoffs-body').innerHTML = '<tr><td colspan="' + COLUMNS.length + '" class="muted">' + escapeHtml(t('list.empty')) + '</td></tr>';
+    $('handovers-body').innerHTML = '<tr><td colspan="' + COLUMNS.length + '" class="muted">' + escapeHtml(t('list.empty')) + '</td></tr>';
     return;
   }
 
@@ -1093,7 +1102,7 @@ function renderHandoffs() {
     ? '<span class="date-cell">' + escapeHtml(value) + '</span>'
     : '<span class="muted">' + escapeHtml(t('value.notSet')) + '</span>';
 
-  $('handoffs-body').innerHTML = state.items.map((item) => {
+  $('handovers-body').innerHTML = state.items.map((item) => {
     const r = calculateStatus(item, state.referenceDate);
     const warnings = r.warnings.filter((w) => w !== STATUS.MISSING_PLANNED);
 
@@ -1136,7 +1145,7 @@ function renderHistory() {
 
 function render() {
   renderIndicators();
-  renderHandoffs();
+  renderHandovers();
   renderHistory();
 }
 
@@ -1262,7 +1271,7 @@ function setupDateDialog() {
   const form = $('date-form');
   attachDateMask($('f-action-date'));
 
-  $('handoffs-body').addEventListener('click', (event) => {
+  $('handovers-body').addEventListener('click', (event) => {
     const button = event.target.closest('button[data-action]');
     if (!button) return;
     const item = state.items.find((i) => i.id === Number(button.dataset.id));

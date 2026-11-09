@@ -41,7 +41,7 @@ Use a fallback chain, because browser support differs:
 
 When the page is opened from a local file (`location.protocol === "file:"`), show a short note in the menu: the link only works on this computer, publish the page (for example with GitHub Pages) to share it with other people.
 
-Sharing sends only the link (and the language). The handoffs typed on the page are not shared, because they live only in the page memory.
+Sharing sends only the link (and the language). The handovers typed on the page are not shared, because they live only in the page memory.
 
 ### Tests
 - Keep every existing acceptance test passing. Tests keep comparing English labels.
