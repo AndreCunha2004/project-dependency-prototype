@@ -1468,10 +1468,12 @@ function formatTimestamp(date) {
 const DEFAULT_REFERENCE_DATE = '20/09/2026';
 
 const SAMPLE_PILOT_ITEMS = [
-  { origin: 'Steel Structure', destination: 'Civil', input: 'Foundation drawings', plannedDate: '12/09/2026', neededByDate: '14/09/2026', deliveryDate: '18/09/2026', deliveredBy: 'Steel Structure lead', acceptanceDate: '18/09/2026', acceptedBy: 'Civil lead', owner: 'Steel Structure lead', originPending: '' },
-  { origin: 'Civil', destination: 'Electrical', input: 'Load list', plannedDate: '20/09/2026', neededByDate: '22/09/2026', deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '', owner: 'Civil lead', originPending: 'Equipment loads waiting for client confirmation' },
-  { origin: 'Electrical', destination: 'Automation', input: 'Single-line diagram', plannedDate: '18/09/2026', neededByDate: '19/09/2026', deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '', owner: 'Electrical lead', originPending: '' },
-  { origin: 'Automation', destination: 'Commissioning', input: 'Test parameters', plannedDate: '28/09/2026', neededByDate: '30/09/2026', deliveryDate: '19/09/2026', deliveredBy: 'Automation lead', acceptanceDate: '', acceptedBy: '', owner: 'Automation lead', originPending: '' }
+  // A consistent chain: each discipline delivers only after receiving its own input,
+  // and planned dates grow along the chain. The Civil delay propagates downstream.
+  { origin: 'Steel Structure', destination: 'Civil', input: 'Foundation drawings', plannedDate: '08/09/2026', neededByDate: '10/09/2026', deliveryDate: '08/09/2026', deliveredBy: 'Steel Structure lead', acceptanceDate: '09/09/2026', acceptedBy: 'Civil lead', owner: 'Steel Structure lead', originPending: '' },
+  { origin: 'Civil', destination: 'Electrical', input: 'Load list', plannedDate: '12/09/2026', neededByDate: '14/09/2026', deliveryDate: '18/09/2026', deliveredBy: 'Civil lead', acceptanceDate: '18/09/2026', acceptedBy: 'Electrical lead', owner: 'Civil lead', originPending: '' },
+  { origin: 'Electrical', destination: 'Automation', input: 'Single-line diagram', plannedDate: '18/09/2026', neededByDate: '19/09/2026', deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '', owner: 'Electrical lead', originPending: 'Protection settings waiting for client confirmation' },
+  { origin: 'Automation', destination: 'Commissioning', input: 'Test parameters', plannedDate: '22/09/2026', neededByDate: '24/09/2026', deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '', owner: 'Automation lead', originPending: '' }
 ];
 
 const SAMPLE_EXPANSION_ITEMS = [
@@ -1551,8 +1553,8 @@ function runAcceptanceTests() {
       return formatStatusLabel(r, 'en') + ' | accepted: ' + r.accepted;
     }],
     ['X9 KPI without deliveries', 'N/A on time | 1 blocked | 2 open blocked days', () => indicatorsText([item('18/09/2026'), item('25/09/2026')], REF)],
-    // On 15/09 both sample deliveries (18/09 and 19/09) are in the future, so none counts.
-    ['X10 KPI, reference 15/09', 'N/A on time | 1 blocked | 3 open blocked days', () => indicatorsText(SAMPLE_ITEMS, '15/09/2026')],
+    // On 15/09 the Civil delivery (18/09) is in the future: only the Steel Structure delivery counts.
+    ['X10 KPI, reference 15/09', '100.0% on time | 1 blocked | 3 open blocked days', () => indicatorsText(SAMPLE_ITEMS, '15/09/2026')],
     ['X11 invalid date 31/02', 'null', () => String(parseDateToDay('31/02/2026'))],
     ['X12 date round trip', '20/09/2026', () => formatDay(parseDateToDay('20/09/2026'))],
     ['X13 days across months', '18', () => String(daysBetween('25/08/2026', '12/09/2026'))],
@@ -1573,27 +1575,38 @@ function runAcceptanceTests() {
     // Panel indicators from the proposal
     ['M1 blocking days this month, sample', '5', () => String(calculateIndicators(SAMPLE_ITEMS, REF).monthBlockingDays)],
     ['M2 blocking days, only this month', '3', () => String(calculateIndicators([item('20/08/2026', '', '', '28/08/2026')], '03/09/2026').monthBlockingDays)],
-    ['T1 lead time, sample', '0.0 days | 1 accepted | 1 awaiting', () => {
+    ['T1 lead time, sample', '0.5 days | 2 accepted | 0 awaiting', () => {
       const k = calculateIndicators(SAMPLE_ITEMS, REF);
       return formatDecimal(k.leadTimeAverage, 'en') + ' days | ' + k.acceptedCount + ' accepted | ' + k.awaitingAcceptanceCount + ' awaiting';
     }],
     ['T2 lead time average', '1.5', () => formatDecimal(calculateIndicators([item('12/09/2026', '18/09/2026', '20/09/2026'), item('12/09/2026', '19/09/2026', '20/09/2026')], REF).leadTimeAverage, 'en')],
-    ['K1 by discipline, sample', 'Steel Structure 0.0% delay 6 | Civil N/A blocking 4 | Electrical held 1 delay 2 | Automation 100.0% blocking 1', () => {
+    ['K1 by discipline, sample', 'Steel Structure 100.0% delay 0 | Civil 0.0% delay 6 | Electrical held 1 delay 2 blocking 4 | Automation N/A blocking 1', () => {
       const rows = calculateDisciplineIndicators(SAMPLE_ITEMS, REF);
       const find = (name) => rows.filter((r) => r.discipline === name)[0];
-      return 'Steel Structure ' + formatPercent(find('Steel Structure').onTimePercent, 'en') + ' delay ' + find('Steel Structure').originDelayDays +
-        ' | Civil ' + formatPercent(find('Civil').onTimePercent, 'en') + ' blocking ' + find('Civil').destinationBlockedDays +
-        ' | Electrical held ' + find('Electrical').activeBlocksHeld + ' delay ' + find('Electrical').originDelayDays +
-        ' | Automation ' + formatPercent(find('Automation').onTimePercent, 'en') + ' blocking ' + find('Automation').destinationBlockedDays;
+      const steel = find('Steel Structure'), civil = find('Civil'), electrical = find('Electrical'), automation = find('Automation');
+      return 'Steel Structure ' + formatPercent(steel.onTimePercent, 'en') + ' delay ' + steel.originDelayDays +
+        ' | Civil ' + formatPercent(civil.onTimePercent, 'en') + ' delay ' + civil.originDelayDays +
+        ' | Electrical held ' + electrical.activeBlocksHeld + ' delay ' + electrical.originDelayDays + ' blocking ' + electrical.destinationBlockedDays +
+        ' | Automation ' + formatPercent(automation.onTimePercent, 'en') + ' blocking ' + automation.destinationBlockedDays;
     }],
     ['C1 cascade stops at delivered', 'B → C', () => findCascade(chain, chain[0], REF).map(formatRoute).join(', ')],
-    ['C2 cascade, sample at risk', 'Electrical → Automation', () => findCascade(SAMPLE_ITEMS, SAMPLE_ITEMS[1], REF).map(formatRoute).join(', ')],
+    ['C2 cascade, sample blocked', 'Automation → Commissioning', () => findCascade(SAMPLE_ITEMS, SAMPLE_ITEMS[2], REF).map(formatRoute).join(', ')],
     ['W1 summary first line', 'Electrical → Automation: blocked 2 days, held by Electrical.', () => buildWeeklySummary(SAMPLE_ITEMS, REF, 'en')[0].text],
     ['W2 summary suggestion', 'Suggestion: bring forward the interface meeting between Electrical and Automation.', () => {
       const lines = buildWeeklySummary(SAMPLE_ITEMS, REF, 'en');
       return lines[lines.length - 1].text;
     }],
     ['W3 summary with nothing open', 'No blocks or risks on the reference date.', () => buildWeeklySummary([item('30/09/2026')], REF, 'en')[0].text],
+    ['F2 sample chain is consistent', 'consistent', () => {
+      const problems = [];
+      SAMPLE_PROJECTS.forEach((project) => project.items.forEach((it) => {
+        const input = project.items.filter((x) => x.destination === it.origin)[0];
+        if (!input) return;
+        if (parseDateToDay(it.plannedDate) < parseDateToDay(input.plannedDate)) problems.push(formatRoute(it) + ' planned before its input');
+        if (it.deliveryDate && (!input.deliveryDate || parseDateToDay(it.deliveryDate) < parseDateToDay(input.deliveryDate))) problems.push(formatRoute(it) + ' delivered before its input');
+      }));
+      return problems.length ? problems.join('; ') : 'consistent';
+    }],
     ['F1 map levels, sample', 'Steel Structure 0, Civil 1, Electrical 2, Automation 3, Commissioning 4', () => {
       const levels = computeDisciplineLevels(SAMPLE_ITEMS);
       return Array.from(levels.entries()).map((e) => e[0] + ' ' + e[1]).join(', ');

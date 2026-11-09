@@ -75,7 +75,7 @@ The acceptance tests are inside `index.html` and run automatically when the page
 
 1. Open `index.html`.
 2. Open the browser console: `F12` (or `Ctrl+Shift+J` on Chrome and Edge, `Cmd+Option+J` on Mac).
-3. Look for `Bastão acceptance tests (reference date 20/09/2026): 73 of 73 passed` and the table below it with the columns `case`, `expected`, `actual` and `pass`.
+3. Look for `Bastão acceptance tests (reference date 20/09/2026): 74 of 74 passed` and the table below it with the columns `case`, `expected`, `actual` and `pass`.
 
 Run them again with:
 
@@ -149,12 +149,14 @@ The acceptance criteria use the **Pilot project**.
 
 **Pilot project**
 
-| Origin | Destination | Input | Planned | Needed by | Delivered | Accepted |
-|---|---|---|---|---|---|---|
-| Steel Structure | Civil | Foundation drawings | 12/09/2026 | 14/09/2026 | 18/09/2026 | 18/09/2026 |
-| Civil | Electrical | Load list | 20/09/2026 | 22/09/2026 | | |
-| Electrical | Automation | Single-line diagram | 18/09/2026 | 19/09/2026 | | |
-| Automation | Commissioning | Test parameters | 28/09/2026 | 30/09/2026 | 19/09/2026 | |
+A consistent chain: each discipline delivers only after receiving its own input. The Civil delay propagates: Electrical is now blocked and Automation is at risk.
+
+| Origin | Destination | Input | Planned | Needed by | Delivered | Accepted | Status on 20/09/2026 |
+|---|---|---|---|---|---|---|---|
+| Steel Structure | Civil | Foundation drawings | 08/09/2026 | 10/09/2026 | 08/09/2026 | 09/09/2026 | Delivered, on time |
+| Civil | Electrical | Load list | 12/09/2026 | 14/09/2026 | 18/09/2026 | 18/09/2026 | Delivered, 6 days late |
+| Electrical | Automation | Single-line diagram | 18/09/2026 | 19/09/2026 | | | Blocked, 2 days |
+| Automation | Commissioning | Test parameters | 22/09/2026 | 24/09/2026 | | | At risk |
 
 Expected on 20/09/2026: 50.0% inputs on time, 1 active block, 5 blocking days this month, 2 open blocked days.
 
