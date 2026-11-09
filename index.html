@@ -58,6 +58,18 @@
   }
   .context { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-weight: 700; font-size: 14px; }
   .context .dot { opacity: 0.5; }
+  .project-picker { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .project-select {
+    font-weight: 700; font-size: 14px; color: #FFFFFF; background: rgba(255, 255, 255, 0.12);
+    border: 1.5px solid rgba(255, 255, 255, 0.35); border-radius: 10px; padding: 6px 10px; max-width: 100%; cursor: pointer;
+  }
+  .project-select option { color: var(--text); background: #FFFFFF; }
+  .project-select:focus-visible, .link-button:focus-visible { outline: 3px solid rgba(255, 255, 255, 0.7); outline-offset: 2px; }
+  .link-button {
+    border: 0; background: transparent; color: #FFFFFF; font-weight: 700; font-size: 13px; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 3px; padding: 4px 2px;
+  }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .tagline { margin: 4px 0 0; color: rgba(255, 255, 255, 0.8); font-size: 14px; max-width: 680px; }
 
   /* Settings menu (top right corner) */
@@ -300,6 +312,8 @@
   @media (max-width: 560px) {
     .hero { padding: 22px 0 64px; }
     .brand h1 { font-size: 26px; }
+    .context .dot { display: none; }
+    .context { flex-direction: column; align-items: flex-start; }
     .card { padding: 16px; }
     .toolbar { flex-direction: column; align-items: stretch; }
     .toolbar .btn { width: 100%; }
@@ -327,7 +341,11 @@
       <span class="fictional-badge" data-i18n="app.fictional">Fictional data</span>
     </div>
     <p class="context">
-      <span data-i18n="app.project">Pilot project</span>
+      <span class="project-picker">
+        <label for="project-select" class="sr-only" data-i18n="project.label">Project</label>
+        <select id="project-select" class="project-select"></select>
+        <button id="new-project-button" class="link-button" type="button" data-i18n="project.new">New project</button>
+      </span>
       <span class="dot" aria-hidden="true">·</span>
       <span data-i18n="app.flow">Flow between disciplines</span>
     </p>
@@ -571,6 +589,23 @@
   </form>
 </dialog>
 
+<!-- New project dialog -->
+<dialog id="project-dialog" aria-labelledby="project-title">
+  <form id="project-form" class="dialog-body" novalidate>
+    <h2 class="dialog-title" id="project-title" data-i18n="project.dialogTitle">New project</h2>
+    <div class="field">
+      <label for="f-project-name"><span data-i18n="project.name">Project name</span> <span class="required">*</span></label>
+      <input id="f-project-name" name="projectName" class="input" autocomplete="off" maxlength="60" required>
+      <span class="hint" data-i18n="project.hint">The new project starts empty. Use Declare handover to add its handovers.</span>
+      <span class="error" data-error-for="projectName"></span>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close data-i18n="action.cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" data-i18n="project.create">Create project</button>
+    </div>
+  </form>
+</dialog>
+
 <datalist id="disciplines">
   <option value="Process"></option>
   <option value="Steel Structure"></option>
@@ -597,7 +632,15 @@ const TEXT = {
     'app.title': 'Bastão',
     'app.documentTitle': 'Bastão: input handovers between disciplines',
     'app.fictional': 'Fictional data',
-    'app.project': 'Pilot project',
+    'project.label': 'Project',
+    'project.new': 'New project',
+    'project.dialogTitle': 'New project',
+    'project.name': 'Project name',
+    'project.hint': 'The new project starts empty. Use Declare handover to add its handovers.',
+    'project.create': 'Create project',
+    'project.created': 'Project created.',
+    'error.duplicateProject': 'A project with this name already exists.',
+    'history.created': 'Project created: {name}.',
     'app.flow': 'Flow between disciplines',
     'app.tagline': 'Every input between disciplines is declared, delivered, accepted and measured in one place.',
     'app.prototypeNote': 'Prototype for presentation only. Data lives in this page and resets to the fictional examples on reload.',
@@ -783,7 +826,15 @@ const TEXT = {
     'app.title': 'Bastão',
     'app.documentTitle': 'Bastão: handover de inputs entre disciplinas',
     'app.fictional': 'Dados fictícios',
-    'app.project': 'Projeto piloto',
+    'project.label': 'Projeto',
+    'project.new': 'Novo projeto',
+    'project.dialogTitle': 'Novo projeto',
+    'project.name': 'Nome do projeto',
+    'project.hint': 'O novo projeto começa vazio. Use Declarar handover para adicionar os handovers dele.',
+    'project.create': 'Criar projeto',
+    'project.created': 'Projeto criado.',
+    'error.duplicateProject': 'Já existe um projeto com esse nome.',
+    'history.created': 'Projeto criado: {name}.',
     'app.flow': 'Fluxo entre disciplinas',
     'app.tagline': 'Cada input entre disciplinas é declarado, entregue, aceito e medido em um só lugar.',
     'app.prototypeNote': 'Protótipo apenas para apresentação. Os dados ficam nesta página e voltam aos exemplos fictícios ao recarregar.',
@@ -990,12 +1041,17 @@ function tPlural(key, n, params, lang) {
   return t(key + (n === 1 ? '.one' : '.other'), Object.assign({ n: n }, params), lang);
 }
 
-/** Link to share: current address with ?lang=pt when in Portuguese. Pure function. */
-function buildShareUrl(href, lang) {
+/**
+ * Link to share: current address with ?lang=pt when in Portuguese and ?project=<id>
+ * when a project other than the default one is open. Pure function.
+ */
+function buildShareUrl(href, lang, projectId, defaultProjectId) {
   const url = new URL(href);
   url.hash = '';
   if (normalizeLang(lang) === 'en') url.searchParams.delete('lang');
   else url.searchParams.set('lang', lang);
+  if (!projectId || projectId === defaultProjectId) url.searchParams.delete('project');
+  else url.searchParams.set('project', projectId);
   return url.toString();
 }
 
@@ -1392,6 +1448,7 @@ function describeHistoryEntry(entry, lang) {
     origin: entry.origin, destination: entry.destination, input: entry.input, date: entry.date,
     person: entry.person || t('detail.unknownPerson', null, lang)
   };
+  if (entry.type === 'created') return t('history.created', { name: entry.name }, lang);
   let text = t('history.' + entry.type, params, lang);
   if (entry.type === 'declared' && entry.person) text += t('history.owner', params, lang);
   return text;
@@ -1411,12 +1468,40 @@ function formatTimestamp(date) {
 
 const DEFAULT_REFERENCE_DATE = '20/09/2026';
 
-const SAMPLE_ITEMS = [
+const SAMPLE_PILOT_ITEMS = [
   { origin: 'Steel Structure', destination: 'Civil', input: 'Foundation drawings', plannedDate: '12/09/2026', neededByDate: '14/09/2026', deliveryDate: '18/09/2026', deliveredBy: 'Steel Structure lead', acceptanceDate: '18/09/2026', acceptedBy: 'Civil lead', owner: 'Steel Structure lead', originPending: '' },
   { origin: 'Civil', destination: 'Electrical', input: 'Load list', plannedDate: '20/09/2026', neededByDate: '22/09/2026', deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '', owner: 'Civil lead', originPending: 'Equipment loads waiting for client confirmation' },
   { origin: 'Electrical', destination: 'Automation', input: 'Single-line diagram', plannedDate: '18/09/2026', neededByDate: '19/09/2026', deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '', owner: 'Electrical lead', originPending: '' },
   { origin: 'Automation', destination: 'Commissioning', input: 'Test parameters', plannedDate: '28/09/2026', neededByDate: '30/09/2026', deliveryDate: '19/09/2026', deliveredBy: 'Automation lead', acceptanceDate: '', acceptedBy: '', owner: 'Automation lead', originPending: '' }
 ];
+
+const SAMPLE_EXPANSION_ITEMS = [
+  { origin: 'Process', destination: 'Mechanical', input: 'Equipment list', plannedDate: '10/09/2026', neededByDate: '12/09/2026', deliveryDate: '10/09/2026', deliveredBy: 'Process lead', acceptanceDate: '14/09/2026', acceptedBy: 'Mechanical lead', owner: 'Process lead', originPending: '' },
+  { origin: 'Mechanical', destination: 'Piping', input: 'General arrangement', plannedDate: '21/09/2026', neededByDate: '24/09/2026', deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '', owner: 'Mechanical lead', originPending: '' },
+  { origin: 'Piping', destination: 'Instrumentation', input: 'Line list', plannedDate: '30/09/2026', neededByDate: '02/10/2026', deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '', owner: 'Piping lead', originPending: '' }
+];
+
+const DEFAULT_PROJECT_ID = 'pilot';
+const SAMPLE_PROJECTS = [
+  { id: 'pilot', name: 'Pilot project', items: SAMPLE_PILOT_ITEMS },
+  { id: 'expansion', name: 'Expansion project', items: SAMPLE_EXPANSION_ITEMS }
+];
+
+// The pilot project is the reference data set for the acceptance criteria.
+const SAMPLE_ITEMS = SAMPLE_PILOT_ITEMS;
+
+/** Handovers of one project. Pure function. */
+function itemsOfProject(items, projectId) {
+  return items.filter((item) => item.projectId === projectId);
+}
+
+/** Validation for a new project name. Returns an error key or null. */
+function validateProjectName(name, projects) {
+  const clean = String(name || '').trim();
+  if (!clean) return 'error.required';
+  if (projects.some((p) => p.name.trim().toLowerCase() === clean.toLowerCase())) return 'error.duplicateProject';
+  return null;
+}
 
 function statusWithWarnings(item, referenceDate) {
   const r = calculateStatus(item, referenceDate);
@@ -1528,8 +1613,20 @@ function runAcceptanceTests() {
         list.concat(Object.keys(TEXT[lang]).filter((key) => /[\u2013\u2014]/.test(TEXT[lang][key])).map((key) => lang + ':' + key)), []);
       return found.length ? 'found: ' + found.join(', ') : 'no dashes';
     }],
-    ['S1 share link in Portuguese', 'file:///project/index.html?lang=pt', () => buildShareUrl('file:///project/index.html#history', 'pt')],
-    ['S2 share link in English', 'https://example.org/index.html', () => buildShareUrl('https://example.org/index.html?lang=pt', 'en')]
+    ['S1 share link in Portuguese', 'file:///project/index.html?lang=pt', () => buildShareUrl('file:///project/index.html#history', 'pt', 'pilot', 'pilot')],
+    ['S2 share link in English', 'https://example.org/index.html', () => buildShareUrl('https://example.org/index.html?lang=pt&project=pilot', 'en', 'pilot', 'pilot')],
+    ['S3 share link with project', 'https://example.org/index.html?project=expansion', () => buildShareUrl('https://example.org/index.html', 'en', 'expansion', 'pilot')],
+    // Projects
+    ['PR1 items by project', 'pilot 4 | expansion 3', () => {
+      const all = [];
+      SAMPLE_PROJECTS.forEach((p) => p.items.forEach((it) => all.push(Object.assign({ projectId: p.id }, it))));
+      return SAMPLE_PROJECTS.map((p) => p.id + ' ' + itemsOfProject(all, p.id).length).join(' | ');
+    }],
+    ['PR2 expansion indicators', '100.0% on time | 0 blocked | 0 open blocked days', () => indicatorsText(SAMPLE_EXPANSION_ITEMS, REF)],
+    ['PR3 expansion at risk cascade', 'Piping → Instrumentation', () => findCascade(SAMPLE_EXPANSION_ITEMS, SAMPLE_EXPANSION_ITEMS[1], REF).map(formatRoute).join(', ')],
+    ['PR4 duplicate project name', 'error.duplicateProject', () => validateProjectName(' pilot PROJECT ', SAMPLE_PROJECTS)],
+    ['PR5 empty project name', 'error.required', () => validateProjectName('  ', SAMPLE_PROJECTS)],
+    ['PR6 new project name', 'null', () => String(validateProjectName('Retrofit project', SAMPLE_PROJECTS))]
   ];
 
   const results = cases.map(([name, expected, run]) => {
@@ -1560,25 +1657,41 @@ const state = {
   items: [],
   history: [],
   nextId: 1,
-  activeTab: 'panel'
+  activeTab: 'panel',
+  projects: [],
+  activeProjectId: DEFAULT_PROJECT_ID
 };
 
 function addHistory(type, item, date, person, isSample) {
   // Entries are only ever appended: the history has no edit or delete.
   state.history.push(Object.freeze({
-    at: new Date(), type: type, origin: item.origin, destination: item.destination, input: item.input,
-    date: date, person: person || '', isSample: Boolean(isSample)
+    at: new Date(), type: type, projectId: item.projectId, origin: item.origin, destination: item.destination, input: item.input,
+    name: item.name || '', date: date, person: person || '', isSample: Boolean(isSample)
   }));
 }
 
+/** Handovers and history of the open project. */
+function currentItems() {
+  return itemsOfProject(state.items, state.activeProjectId);
+}
+
+function currentHistory() {
+  return state.history.filter((entry) => entry.projectId === state.activeProjectId);
+}
+
 function loadSampleData() {
-  SAMPLE_ITEMS.forEach((sample) => {
-    const item = Object.assign({ id: state.nextId++ }, sample);
-    state.items.push(item);
-    addHistory('declared', item, item.plannedDate, item.owner, true);
-    if (item.deliveryDate) addHistory('delivered', item, item.deliveryDate, item.deliveredBy, true);
-    if (item.acceptanceDate) addHistory('accepted', item, item.acceptanceDate, item.acceptedBy, true);
+  SAMPLE_PROJECTS.forEach((project) => {
+    state.projects.push({ id: project.id, name: project.name });
+    project.items.forEach((sample) => loadSampleItem(project.id, sample));
   });
+}
+
+function loadSampleItem(projectId, sample) {
+  const item = Object.assign({ id: state.nextId++, projectId: projectId }, sample);
+  state.items.push(item);
+  addHistory('declared', item, item.plannedDate, item.owner, true);
+  if (item.deliveryDate) addHistory('delivered', item, item.deliveryDate, item.deliveredBy, true);
+  if (item.acceptanceDate) addHistory('accepted', item, item.acceptanceDate, item.acceptedBy, true);
 }
 
 /* =====================================================================
@@ -1621,13 +1734,14 @@ const COLUMNS = ['route', 'input', 'planned', 'status', 'actions'];
 
 function renderHandovers() {
   $('handovers-head').innerHTML = COLUMNS.map((c) => '<th scope="col">' + escapeHtml(t('col.' + c)) + '</th>').join('');
-  $('handovers-count').textContent = tPlural('list.count', state.items.length);
-  if (state.items.length === 0) {
+  const items = currentItems();
+  $('handovers-count').textContent = tPlural('list.count', items.length);
+  if (items.length === 0) {
     $('handovers-body').innerHTML = '<tr><td colspan="' + COLUMNS.length + '" class="muted">' + escapeHtml(t('list.empty')) + '</td></tr>';
     return;
   }
   const label = (key) => ' data-label="' + escapeHtml(t('col.' + key)) + '"';
-  $('handovers-body').innerHTML = state.items.map((item) => {
+  $('handovers-body').innerHTML = items.map((item) => {
     const r = calculateStatus(item, state.referenceDate);
     const warnings = r.warnings.filter((w) => w !== STATUS.MISSING_PLANNED);
     const delivered = r.status === STATUS.DELIVERED;
@@ -1662,13 +1776,14 @@ function renderHandovers() {
 }
 
 function renderSummary() {
-  $('summary-list').innerHTML = buildWeeklySummary(state.items, state.referenceDate).map((line) =>
+  $('summary-list').innerHTML = buildWeeklySummary(currentItems(), state.referenceDate).map((line) =>
     '<li' + (line.suggestion ? ' class="suggestion"' : '') + '>' + escapeHtml(line.text) + '</li>').join('');
 }
 
 function renderBlocks() {
   const ref = parseDateToDay(state.referenceDate);
-  const rows = state.items.map((item) => ({ item: item, r: calculateStatus(item, state.referenceDate) }));
+  const items = currentItems();
+  const rows = items.map((item) => ({ item: item, r: calculateStatus(item, state.referenceDate) }));
   const blocked = rows.filter((x) => x.r.status === STATUS.BLOCKED).sort((a, b) => b.r.blockedDays - a.r.blockedDays);
   const atRisk = rows.filter((x) => x.r.status === STATUS.AT_RISK).sort((a, b) => a.r.plannedDay - b.r.plannedDay);
   const count = blocked.length + atRisk.length;
@@ -1680,7 +1795,7 @@ function renderBlocks() {
     return;
   }
   const cascadeLine = (x) => {
-    const cascade = findCascade(state.items, x.item, state.referenceDate);
+    const cascade = findCascade(items, x.item, state.referenceDate);
     return '<p class="muted">' + escapeHtml(cascade.length ? t('blocks.cascade', { affected: cascade.map(formatRoute).join(', ') }) : t('blocks.noCascade')) + '</p>';
   };
   const pending = (x) => x.item.originPending ? '<span class="pending-tag">' + escapeHtml(t('detail.pending', { text: x.item.originPending })) + '</span>' : '';
@@ -1713,7 +1828,7 @@ function renderIndicatorsTab(k) {
   const cols = ['discipline', 'handovers', 'onTime', 'delay', 'held', 'blocking'];
   const numeric = { onTime: true, delay: true, held: true, blocking: true };
   $('disciplines-head').innerHTML = cols.map((c) => '<th scope="col"' + (numeric[c] ? ' class="num"' : '') + '>' + escapeHtml(t('disciplines.col.' + c)) + '</th>').join('');
-  const rows = calculateDisciplineIndicators(state.items, state.referenceDate);
+  const rows = calculateDisciplineIndicators(currentItems(), state.referenceDate);
   const cell = (c, html) => '<td' + (numeric[c] ? ' class="num"' : '') + ' data-label="' + escapeHtml(t('disciplines.col.' + c)) + '">' + html + '</td>';
   $('disciplines-body').innerHTML = rows.length ? rows.map((r) => '<tr>' +
     cell('discipline', '<span class="route">' + escapeHtml(r.discipline) + '</span>') +
@@ -1730,12 +1845,13 @@ function renderFlow() {
   const container = $('flow-map');
   const width = container.clientWidth;
   if (!width) return; // hidden tab: drawn when the tab opens
-  if (!state.items.length) {
+  const items = currentItems();
+  if (!items.length) {
     container.innerHTML = '<p class="empty">' + escapeHtml(t('flow.empty')) + '</p>';
     $('flow-legend').innerHTML = '';
     return;
   }
-  const levels = computeDisciplineLevels(state.items);
+  const levels = computeDisciplineLevels(items);
   const byLevel = [];
   levels.forEach((level, name) => { (byLevel[level] = byLevel[level] || []).push(name); });
   const columns = byLevel.filter(Boolean);
@@ -1767,7 +1883,7 @@ function renderFlow() {
   }
 
   const pairCount = new Map();
-  const edges = state.items.map((item) => {
+  const edges = items.map((item) => {
     const r = calculateStatus(item, state.referenceDate);
     const a = pos.get(item.origin);
     const b = pos.get(item.destination);
@@ -1830,14 +1946,20 @@ function renderFlow() {
 }
 
 function renderHistory() {
-  $('history-list').innerHTML = state.history.slice().reverse().map((entry) =>
+  $('history-list').innerHTML = currentHistory().slice().reverse().map((entry) =>
     '<li><time>' + escapeHtml(formatTimestamp(entry.at)) + '</time>' +
     '<span>' + escapeHtml(describeHistoryEntry(entry)) + (entry.isSample ? '<span class="tag">' + escapeHtml(t('history.sample')) + '</span>' : '') + '</span></li>'
   ).join('');
 }
 
+function renderProjectSelector() {
+  $('project-select').innerHTML = state.projects.map((p) =>
+    '<option value="' + escapeHtml(p.id) + '"' + (p.id === state.activeProjectId ? ' selected' : '') + '>' + escapeHtml(p.name) + '</option>').join('');
+}
+
 function render() {
-  const k = calculateIndicators(state.items, state.referenceDate);
+  renderProjectSelector();
+  const k = calculateIndicators(currentItems(), state.referenceDate);
   renderPanelIndicators(k);
   renderHandovers();
   renderSummary();
@@ -1966,7 +2088,7 @@ function setupDeclareDialog() {
       form.querySelector('[name="' + fields[0] + '"]').focus();
       return;
     }
-    const item = Object.assign({ id: state.nextId++, deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '' }, data);
+    const item = Object.assign({ id: state.nextId++, projectId: state.activeProjectId, deliveryDate: '', deliveredBy: '', acceptanceDate: '', acceptedBy: '' }, data);
     state.items.push(item);
     addHistory('declared', item, item.plannedDate, item.owner, false);
     dialog.close();
@@ -2062,11 +2184,56 @@ function setLanguage(lang) {
   applyStaticText();
   syncLanguageButtons();
   // Keep the language in the address so a shared link opens in the same language.
-  try { history.replaceState(null, '', buildShareUrl(location.href, currentLang)); } catch (error) { /* some browsers block this for local files */ }
+  updateAddress();
   if ($('reference-date').getAttribute('aria-invalid') === 'true') {
     $('reference-error').textContent = t('ref.invalid', { ref: state.referenceDate });
   }
   render();
+}
+
+/** Keeps language and project in the address so a shared link opens the same view. */
+function updateAddress() {
+  try { history.replaceState(null, '', buildShareUrl(location.href, currentLang, state.activeProjectId, DEFAULT_PROJECT_ID)); } catch (error) { /* some browsers block this for local files */ }
+}
+
+/* =====================================================================
+   Projects: selector and new project
+   ===================================================================== */
+
+function selectProject(projectId) {
+  if (!state.projects.some((p) => p.id === projectId)) return;
+  state.activeProjectId = projectId;
+  updateAddress();
+  render();
+}
+
+function setupProjects() {
+  $('project-select').addEventListener('change', (event) => selectProject(event.target.value));
+  const dialog = $('project-dialog');
+  const form = $('project-form');
+  $('new-project-button').addEventListener('click', () => {
+    form.reset();
+    clearFormErrors(form);
+    dialog.showModal();
+    $('f-project-name').focus();
+  });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const name = form.projectName.value.trim();
+    clearFormErrors(form);
+    const error = validateProjectName(name, state.projects);
+    if (error) {
+      setFieldError(form, 'projectName', error);
+      $('f-project-name').focus();
+      return;
+    }
+    const project = { id: 'p' + state.nextId++, name: name };
+    state.projects.push(project);
+    addHistory('created', { projectId: project.id, name: name, origin: '', destination: '', input: '' }, '', '', false);
+    dialog.close();
+    selectProject(project.id);
+    showToast(t('project.created'));
+  });
 }
 
 function openSettings() {
@@ -2086,7 +2253,7 @@ function closeSettings(returnFocus) {
 
 /** Native share sheet, then clipboard, then a field to copy by hand. */
 async function shareCurrentPage() {
-  const url = buildShareUrl(location.href, currentLang);
+  const url = buildShareUrl(location.href, currentLang, state.activeProjectId, DEFAULT_PROJECT_ID);
   if (typeof navigator.share === 'function') {
     try {
       await navigator.share({ title: t('app.documentTitle'), text: t('settings.shareText'), url: url });
@@ -2133,6 +2300,10 @@ function setupSettings() {
    8. Start
    ===================================================================== */
 
+function readProjectFromUrl() {
+  try { return new URLSearchParams(location.search).get('project') || DEFAULT_PROJECT_ID; } catch (error) { return DEFAULT_PROJECT_ID; }
+}
+
 function readLanguageFromUrl() {
   try { return normalizeLang(new URLSearchParams(location.search).get('lang')); } catch (error) { return 'en'; }
 }
@@ -2145,6 +2316,9 @@ function init() {
   syncLanguageButtons();
   setupSettings();
   loadSampleData();
+  const requested = readProjectFromUrl();
+  state.activeProjectId = state.projects.some((p) => p.id === requested) ? requested : DEFAULT_PROJECT_ID;
+  setupProjects();
   setupTabs();
   setupReferenceDate();
   setupDeclareDialog();

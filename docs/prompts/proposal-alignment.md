@@ -43,7 +43,7 @@ How it addresses each cause: alert before the deadline (previous discipline dela
 Read `index.html` and `README.md` to confirm. Summary:
 
 - Single HTML file, plain JavaScript, data in memory, fictional sample data, no backend.
-- Header with "Pilot project" and "Flow between disciplines"; "Fictional data" badge; editable reference date used instead of today.
+- Header with a project selector (each project has its own handovers, indicators, flow and history; New project creates an empty one) and "Flow between disciplines"; "Fictional data" badge; editable reference date used instead of today.
 - Tabs: Panel, Flow, Blocks, Indicators, History.
 - Panel: three cards (inputs on time, active blocks, blocking days this month); handover list with From → To, Input, Planned date, Status, Actions; rule-based weekly summary (labelled as a simulation, not AI).
 - Status rules: Delivered (on time or X days late), Blocked X days with "Held by {origin}", At risk (0 to 2 days before), On time, Missing planned date. Future delivery or acceptance dates show a warning and are ignored.
@@ -63,6 +63,8 @@ Read `index.html` and `README.md` to confirm. Summary:
 | Divergences | Where the prototype and the proposal differ, follow the proposal, except where the item needs a backend, integrations or a real AI service. |
 | Sample data | Do not copy the sample data of the deck; it will be redone. Keep the prototype's own fictional data. |
 | Percentages | One decimal place; `N/A` without deliveries. |
+| Project | Project selector (single panel per project), with two fictional projects. |
+| Lead time | Delivery to acceptance. |
 
 ## Task
 
@@ -82,10 +84,8 @@ Classification, one of:
 ### Step 2: definitions to confirm
 List every rule where the deck and the prototype could mean different things, with the options and a recommendation. At least:
 Items already decided are listed above; check that the code follows them. Still open:
-1. **Handover lead time:** the prototype uses delivery to acceptance. Alternatives: declaration to acceptance, or planned date to acceptance.
-2. **Pending item at the origin:** today a free text set at declaration. Should it be editable later or become a status?
-3. **Project:** a fixed "Pilot project" label today. Is a project selector needed for the next presentation?
-4. **Who declares:** the deck says each discipline records what it depends on (destination side); the form does not record who declared.
+1. **Pending item at the origin:** today a free text set at declaration. Should it be editable later or become a status?
+2. **Who declares:** the deck says each discipline records what it depends on (destination side); the form does not record who declared.
 
 ### Step 3: prioritized plan
 Group the suggested actions into:

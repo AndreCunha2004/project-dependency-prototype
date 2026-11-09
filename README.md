@@ -12,12 +12,13 @@ A relay-style prototype to declare, deliver and accept inputs between engineerin
 1. Download or clone this repository.
 2. Open `index.html` in any modern browser (double click the file).
 
-No installation, server or account is needed. The only external request is the Montserrat font from Google Fonts; without internet the page still works with a fallback font. Everything lives in the page memory: reloading the page brings back the four fictional examples.
+No installation, server or account is needed. The only external request is the Montserrat font from Google Fonts; without internet the page still works with a fallback font. Everything lives in the page memory: reloading the page brings back the fictional examples, and projects created on the page are lost.
 
 ## What the page does
 
 | Area | Description |
 |---|---|
+| Project selector | Top of the page. Each project has its own handovers, indicators, flow, blocks and history. *New project* creates an empty one. Two fictional projects come loaded. |
 | Reference date | Editable date at the top (starts at 20/09/2026). Every calculation uses it instead of "today". |
 | Declare handover | Origin, destination, input and planned date are required. Optional: needed-by date, owner and a pending item at the origin. |
 | Deliver / Accept | Delivery check-in and acceptance, each with date and responsible person. Deliver appears only before delivery; Accept only after delivery. Accepting does not change the status. |
@@ -26,7 +27,7 @@ No installation, server or account is needed. The only external request is the M
 | **Blocks** tab | Blocked and at risk handovers, who is holding the input, how long the destination is waiting and what may be affected next. |
 | **Indicators** tab | Project indicators, the two delay measures and indicators by discipline. |
 | **History** tab | Read-only log of every declaration, delivery and acceptance, with date, time and responsible person. |
-| Settings (gear, top right) | English or Brazilian Portuguese, and share the page link. |
+| Settings (gear, top right) | English or Brazilian Portuguese, and share the page link. The link keeps the language and the open project (`?lang=pt&project=expansion`). |
 
 All dates use the `DD/MM/YYYY` format. Days are calendar days. Percentages have one decimal place (`50.0%`, or `50,0%` in Portuguese) and show `N/A` when there are no deliveries.
 
@@ -74,7 +75,7 @@ The acceptance tests are inside `index.html` and run automatically when the page
 
 1. Open `index.html`.
 2. Open the browser console: `F12` (or `Ctrl+Shift+J` on Chrome and Edge, `Cmd+Option+J` on Mac).
-3. Look for `Bastão acceptance tests (reference date 20/09/2026): 50 of 50 passed` and the table below it with the columns `case`, `expected`, `actual` and `pass`.
+3. Look for `Bastão acceptance tests (reference date 20/09/2026): 57 of 57 passed` and the table below it with the columns `case`, `expected`, `actual` and `pass`.
 
 Run them again with:
 
@@ -82,7 +83,7 @@ Run them again with:
 runAcceptanceTests()
 ```
 
-They cover cases A to H from the specification, the sample indicators (50.0%, 1, 2), status edge cases, the percentage format, both delay measures, blocking days in the month, lead time, indicators by discipline, cascade risk, the weekly summary, the dependency map levels, the Portuguese texts and the share link.
+They cover cases A to H from the specification, the sample indicators (50.0%, 1, 2), status edge cases, the percentage format, both delay measures, blocking days in the month, lead time, indicators by discipline, cascade risk, the weekly summary, the dependency map levels, projects (handovers by project, name validation), the Portuguese texts and the share link.
 
 ### Trying other reference dates
 
@@ -97,7 +98,7 @@ tryCase("12/09/2026", "18/09/2026", "20/09/2026", "", "15/09/2026")
 // "Delivered, 6 days late | origin delay 6 | destination blocking 3"
 ```
 
-The business rules are pure functions (no access to the page): `calculateStatus`, `calculateIndicators`, `calculateDisciplineIndicators`, `findCascade`, `buildWeeklySummary`, `computeDisciplineLevels`, `parseDateToDay` and `daysBetween`.
+The business rules are pure functions (no access to the page): `calculateStatus`, `calculateIndicators`, `itemsOfProject`, `validateProjectName`, `calculateDisciplineIndicators`, `findCascade`, `buildWeeklySummary`, `computeDisciplineLevels`, `parseDateToDay` and `daysBetween`.
 
 ## Publishing
 
@@ -121,6 +122,10 @@ Inside `index.html`, the script is split into numbered sections: interface text 
 
 ## Fictional sample data
 
+The acceptance criteria use the **Pilot project**.
+
+**Pilot project**
+
 | Origin | Destination | Input | Planned | Needed by | Delivered | Accepted |
 |---|---|---|---|---|---|---|
 | Steel Structure | Civil | Foundation drawings | 12/09/2026 | 14/09/2026 | 18/09/2026 | 18/09/2026 |
@@ -129,3 +134,13 @@ Inside `index.html`, the script is split into numbered sections: interface text 
 | Automation | Commissioning | Test parameters | 28/09/2026 | 30/09/2026 | 19/09/2026 | |
 
 Expected on 20/09/2026: 50.0% inputs on time, 1 active block, 5 blocking days this month, 2 open blocked days.
+
+**Expansion project**
+
+| Origin | Destination | Input | Planned | Needed by | Delivered | Accepted |
+|---|---|---|---|---|---|---|
+| Process | Mechanical | Equipment list | 10/09/2026 | 12/09/2026 | 10/09/2026 | 14/09/2026 |
+| Mechanical | Piping | General arrangement | 21/09/2026 | 24/09/2026 | | |
+| Piping | Instrumentation | Line list | 30/09/2026 | 02/10/2026 | | |
+
+Expected on 20/09/2026: 100.0% inputs on time, 0 active blocks, 0 blocking days this month, 1 at risk handover.
