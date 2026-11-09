@@ -43,14 +43,26 @@ How it addresses each cause: alert before the deadline (previous discipline dela
 Read `index.html` and `README.md` to confirm. Summary:
 
 - Single HTML file, plain JavaScript, data in memory, fictional sample data, no backend.
-- Editable reference date used instead of today.
-- Handover list: origin, destination, input, planned date, delivery date, acceptance date, owner, calculated status.
-- Status rules: Delivered (on time or X days late), Blocked X days (reference after planned date), At risk (0 to 2 days before), On time, Missing planned date. Future delivery or acceptance dates show a warning and are ignored.
-- Declare handover form; Deliver and Accept buttons; acceptance does not change the status.
-- Three indicators: % on-time deliveries (one decimal), blocked handovers, open blocked days.
-- Read-only history with timestamp and description.
-- Settings menu: English and Brazilian Portuguese, share link.
-- Responsive down to 375 px; acceptance tests in the console.
+- Header with "Pilot project" and "Flow between disciplines"; "Fictional data" badge; editable reference date used instead of today.
+- Tabs: Panel, Flow, Blocks, Indicators, History.
+- Panel: three cards (inputs on time, active blocks, blocking days this month); handover list with From → To, Input, Planned date, Status, Actions; rule-based weekly summary (labelled as a simulation, not AI).
+- Status rules: Delivered (on time or X days late), Blocked X days with "Held by {origin}", At risk (0 to 2 days before), On time, Missing planned date. Future delivery or acceptance dates show a warning and are ignored.
+- Two delay measures: origin delay (from the planned date) and destination blocking (from the needed-by date, falling back to the planned date).
+- Declare form with optional needed-by date, owner and pending item at the origin. Deliver and Accept record date and responsible person.
+- Flow: dependency map with arrows colored by status. Blocks: blocked and at risk handovers with cascade impact. Indicators: project indicators, both delay measures, indicators by discipline, handover lead time (delivery to acceptance).
+- Read-only history with timestamp, description and responsible person.
+- Settings menu: English and Brazilian Portuguese, share link. Responsive down to 320 px; acceptance tests in the console.
+
+## Decisions already taken
+
+| Topic | Decision |
+|---|---|
+| Term | "Handover" in both languages. |
+| Delay | Measure both sides: origin delay drives the status; destination blocking uses an optional needed-by date. |
+| Panel blocking indicator | "Blocking days this month" (destination side). "Open blocked days" (origin side) stays in the Indicators tab. |
+| Divergences | Where the prototype and the proposal differ, follow the proposal, except where the item needs a backend, integrations or a real AI service. |
+| Sample data | Do not copy the sample data of the deck; it will be redone. Keep the prototype's own fictional data. |
+| Percentages | One decimal place; `N/A` without deliveries. |
 
 ## Task
 
@@ -69,13 +81,11 @@ Classification, one of:
 
 ### Step 2: definitions to confirm
 List every rule where the deck and the prototype could mean different things, with the options and a recommendation. At least:
-1. **Blocking days reference:** the deck counts from the destination's need or start date (example: 15/09 to 18/09 = 3 days); the prototype counts from the origin's planned delivery date (12/09 to 18/09 = 6 days late). Is one date enough, or should a "needed by" date be added?
-2. **Blocking days indicator:** deck "blocking days in the month" versus prototype "open blocked days" (only handovers not yet delivered).
-3. **Indicators per discipline:** which discipline gets the blocking days, origin (who held the input) or destination (who waited)?
-4. **Handover lead time:** from declaration to acceptance, from delivery to acceptance, or from planned date to acceptance?
-5. **Responsible person on check-in and in history:** the prototype has an owner per handover but does not record who performed each action.
-6. **Pending item at the origin** (poor scope): free text note, status, or out of scope?
-7. **Project:** single pilot project label, or a project selector?
+Items already decided are listed above; check that the code follows them. Still open:
+1. **Handover lead time:** the prototype uses delivery to acceptance. Alternatives: declaration to acceptance, or planned date to acceptance.
+2. **Pending item at the origin:** today a free text set at declaration. Should it be editable later or become a status?
+3. **Project:** a fixed "Pilot project" label today. Is a project selector needed for the next presentation?
+4. **Who declares:** the deck says each discipline records what it depends on (destination side); the form does not record who declared.
 
 ### Step 3: prioritized plan
 Group the suggested actions into:
